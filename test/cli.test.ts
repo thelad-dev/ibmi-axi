@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_MEMBER_BYTES } from "../src/config.js";
+import { MAX_MEMBER_BYTES, MAX_MEMBER_PREVIEW } from "../src/config.js";
 import { parseLsSizeBytes, parseWcBytes } from "../src/commands/member.js";
 import { VERSION } from "../src/version.js";
 import {
@@ -139,11 +139,47 @@ describe("ibmi-axi CLI", () => {
     expect(result.stdout).toMatch(/allow-large/);
   });
 
+  it("member read refuses when export size is unknown even if source probe is small", async () => {
+    const seen: string[] = [];
+    const runner = memberMock({
+      sourceBytes: 64,
+      failExportProbe: true,
+      content: `${"Z".repeat(MAX_MEMBER_BYTES + 100)}\n`,
+    });
+    const wrapped = mockRunner(async (cmd) => {
+      seen.push(cmd);
+      return runner.run(cmd);
+    });
+    const result = await runCli(
+      ["member", "read", "DENSION/QS36SRC", "AERA01", "--full"],
+      wrapped,
+    );
+    expect(result.code).not.toBe(0);
+    expect(result.stdout).toMatch(/MEMBER_SIZE_UNKNOWN|could not be determined/i);
+    expect(result.stdout).toMatch(/allow-large/);
+    expect(seen.some((c) => c.includes("CPYTOSTMF"))).toBe(true);
+    expect(seen.some((c) => c.startsWith("cat "))).toBe(false);
+  });
+
+  it("member read honors --limit up to MAX_MEMBER_PREVIEW without silent lower cap", async () => {
+    const marker = "X";
+    const content = `${marker.repeat(12_000)}\n`;
+    const result = await runCli(
+      ["member", "read", "DENSION/QS36SRC", "AERA01", "--limit", "11000"],
+      memberMock({ sourceBytes: content.length, exportBytes: content.length, content }),
+    );
+    expect(result.code).toBe(0);
+    expect(result.stdout).toMatch(/truncated:\s*true/);
+    const contentMatch = result.stdout.match(/content:\s*"(X+)/);
+    expect(contentMatch?.[1]?.length).toBe(11_000);
+  });
+
   it("member help documents --allow-large and size cap", async () => {
     const result = await runCli(["member", "--help"], defaultMock());
     expect(result.code).toBe(0);
     expect(result.stdout).toMatch(/--allow-large/);
     expect(result.stdout).toMatch(new RegExp(String(MAX_MEMBER_BYTES)));
+    expect(result.stdout).toMatch(new RegExp(String(MAX_MEMBER_PREVIEW)));
   });
 
   it("ifs ls returns bounded entries", async () => {

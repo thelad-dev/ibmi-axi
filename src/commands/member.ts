@@ -8,7 +8,7 @@ import {
   takeBoolFlag,
   takeFlag,
 } from "../args.js";
-import { DEFAULT_MEMBER_PREVIEW, MAX_LIMIT, MAX_MEMBER_BYTES } from "../config.js";
+import { DEFAULT_MEMBER_PREVIEW, MAX_MEMBER_BYTES, MAX_MEMBER_PREVIEW } from "../config.js";
 import type { IbmiConfig } from "../config.js";
 import { parseMemberTarget, shSingleQuote } from "../parse.js";
 import { redact, truncate } from "../redact.js";
@@ -38,7 +38,7 @@ export async function memberCommand(args: string[], ctx: AppContext | undefined)
   const limit = parseLimit(
     takeFlag(local, "--limit"),
     DEFAULT_MEMBER_PREVIEW,
-    200_000,
+    MAX_MEMBER_PREVIEW,
     "--limit",
   );
   rejectUnknownFlags(local, "member read", ["--full", "--limit", "--host", "--allow-large"]);
@@ -91,7 +91,7 @@ export async function memberCommand(args: string[], ctx: AppContext | undefined)
     // Second guard on the exported stream before cat'ing into the agent process.
     const exported = await probeRemoteBytes(ctx.config, tmp);
     assertMemberSizeAllowed({
-      bytes: exported ?? probed,
+      bytes: exported,
       allowLarge,
       label,
       phase: "export",
@@ -114,8 +114,8 @@ export async function memberCommand(args: string[], ctx: AppContext | undefined)
       throw memberTooLargeError({ bytes: total, label, phase: "content" });
     }
 
-    const shown = full ? body : truncate(body, Math.min(limit, MAX_LIMIT * 20)).text;
-    const truncated = !full && total > Math.min(limit, MAX_LIMIT * 20);
+    const shown = full ? body : truncate(body, limit).text;
+    const truncated = !full && total > limit;
 
     const out: Record<string, unknown> = {
       member: {

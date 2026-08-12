@@ -151,32 +151,37 @@ export function memberMock(opts: {
   exportBytes?: number;
   content?: string;
   failSourceProbe?: boolean;
+  /** Fail only the post-CPYTOSTMF size probe (source probe still succeeds). */
+  failExportProbe?: boolean;
 }): SshRunner {
   const content = opts.content ?? SAMPLE_MEMBER_CONTENT;
   const sourceBytes = opts.sourceBytes ?? content.length;
   const exportBytes = opts.exportBytes ?? sourceBytes;
-  let probeCount = 0;
+  let copied = false;
 
   return mockRunner((cmd) => {
     if (cmd.includes("CPYTOSTMF")) {
+      copied = true;
       return { code: 0, stdout: "CPCA082: Objekt kopiert.\n", stderr: "" };
     }
     if (cmd.includes("ls -ln ") || /(^|\|\s*)ls -l /.test(cmd)) {
-      if (opts.failSourceProbe && probeCount === 0) {
-        probeCount++;
+      if (opts.failSourceProbe && !copied) {
         return { code: 1, stdout: "", stderr: "not found" };
       }
-      const bytes = probeCount === 0 ? sourceBytes : exportBytes;
-      probeCount++;
+      if (opts.failExportProbe && copied) {
+        return { code: 1, stdout: "", stderr: "export missing" };
+      }
+      const bytes = copied ? exportBytes : sourceBytes;
       return { code: 0, stdout: lsSizeLine(bytes), stderr: "" };
     }
     if (cmd.includes("wc -c")) {
-      if (opts.failSourceProbe && probeCount === 0) {
-        probeCount++;
+      if (opts.failSourceProbe && !copied) {
         return { code: 1, stdout: "", stderr: "not found" };
       }
-      const bytes = probeCount === 0 ? sourceBytes : exportBytes;
-      probeCount++;
+      if (opts.failExportProbe && copied) {
+        return { code: 1, stdout: "", stderr: "export missing" };
+      }
+      const bytes = copied ? exportBytes : sourceBytes;
       return { code: 0, stdout: `${bytes}\n`, stderr: "" };
     }
     if (cmd.startsWith("cat ")) {

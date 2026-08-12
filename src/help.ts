@@ -1,4 +1,4 @@
-import { MAX_MEMBER_BYTES } from "./config.js";
+import { MAX_MEMBER_BYTES, MAX_MEMBER_PREVIEW } from "./config.js";
 
 export const DESCRIPTION =
   "Thin Live-Read AXI for IBM i — objects, joblogs, spools, members, and IFS over SSH";
@@ -57,7 +57,7 @@ examples:
   member: `usage: ibmi-axi member read <LIB/FILE> <MBR> [--full] [--limit <chars>] [--allow-large] [--host <ssh-host>]
 description: Read a source/data member via CPYTOSTMF (read-only, truncated by default)
 subcommands[1]: read
-flags[4]: --full, --limit <chars> (default 1500), --allow-large (override ${MAX_MEMBER_BYTES}-byte export cap; risk: large SSH/temp/agent payload), --host <ssh-host>
+flags[4]: --full, --limit <chars> (default 1500, max ${MAX_MEMBER_PREVIEW}), --allow-large (override ${MAX_MEMBER_BYTES}-byte export cap; risk: large SSH/temp/agent payload), --host <ssh-host>
 notes[2]:
   Hard max export size is ${MAX_MEMBER_BYTES} bytes unless --allow-large is set.
   Size is probed (ls/wc) before CPYTOSTMF and before cat; oversized members are refused.
