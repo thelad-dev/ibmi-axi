@@ -76,6 +76,14 @@ CPD0000     DIAGNOSTIC    20        Something password=supersecret   2026-08-12-
   2 RECORD(S) SELECTED.
 `;
 
+export const SAMPLE_MEMBER_CONTENT =
+  "0001 H** SAMPLE MEMBER\n0002 C     HELLO\npassword=should-redact\n";
+
+/** ls -l line with a controllable size field (5th column). */
+export function lsSizeLine(bytes: number, name = "member"): string {
+  return `-rw-r--r-- 1 100 0 ${bytes} Jan 1 00:00 ${name}\n`;
+}
+
 export function defaultMock(): SshRunner {
   return mockRunner((cmd) => {
     if (cmd.includes("uname")) {
@@ -102,10 +110,19 @@ export function defaultMock(): SshRunner {
     if (cmd.includes("CPYTOSTMF")) {
       return { code: 0, stdout: "CPCA082: Objekt kopiert.\n", stderr: "" };
     }
+    // Member size probes (`ls -ln path || ls -l path`) before CPYTOSTMF/cat.
+    if (cmd.includes("ls -ln ") || /(^|\|\s*)ls -l /.test(cmd)) {
+      if (cmd.includes(".MBR") || cmd.includes("ibmi-axi-mbr-")) {
+        return { code: 0, stdout: lsSizeLine(SAMPLE_MEMBER_CONTENT.length), stderr: "" };
+      }
+    }
+    if (cmd.includes("wc -c")) {
+      return { code: 0, stdout: `${SAMPLE_MEMBER_CONTENT.length}\n`, stderr: "" };
+    }
     if (cmd.startsWith("cat ")) {
       return {
         code: 0,
-        stdout: "0001 H** SAMPLE MEMBER\n0002 C     HELLO\npassword=should-redact\n",
+        stdout: SAMPLE_MEMBER_CONTENT,
         stderr: "",
       };
     }
@@ -123,6 +140,50 @@ drwxr-xr-x  2 ladwein 0 8192 Jun  9 12:38 .cache
 `,
         stderr: "",
       };
+    }
+    return { code: 1, stdout: "", stderr: `unexpected command: ${cmd}` };
+  });
+}
+
+/** Member-focused mock with controllable remote size and optional cat body. */
+export function memberMock(opts: {
+  sourceBytes?: number;
+  exportBytes?: number;
+  content?: string;
+  failSourceProbe?: boolean;
+}): SshRunner {
+  const content = opts.content ?? SAMPLE_MEMBER_CONTENT;
+  const sourceBytes = opts.sourceBytes ?? content.length;
+  const exportBytes = opts.exportBytes ?? sourceBytes;
+  let probeCount = 0;
+
+  return mockRunner((cmd) => {
+    if (cmd.includes("CPYTOSTMF")) {
+      return { code: 0, stdout: "CPCA082: Objekt kopiert.\n", stderr: "" };
+    }
+    if (cmd.includes("ls -ln ") || /(^|\|\s*)ls -l /.test(cmd)) {
+      if (opts.failSourceProbe && probeCount === 0) {
+        probeCount++;
+        return { code: 1, stdout: "", stderr: "not found" };
+      }
+      const bytes = probeCount === 0 ? sourceBytes : exportBytes;
+      probeCount++;
+      return { code: 0, stdout: lsSizeLine(bytes), stderr: "" };
+    }
+    if (cmd.includes("wc -c")) {
+      if (opts.failSourceProbe && probeCount === 0) {
+        probeCount++;
+        return { code: 1, stdout: "", stderr: "not found" };
+      }
+      const bytes = probeCount === 0 ? sourceBytes : exportBytes;
+      probeCount++;
+      return { code: 0, stdout: `${bytes}\n`, stderr: "" };
+    }
+    if (cmd.startsWith("cat ")) {
+      return { code: 0, stdout: content, stderr: "" };
+    }
+    if (cmd.startsWith("rm -f")) {
+      return { code: 0, stdout: "", stderr: "" };
     }
     return { code: 1, stdout: "", stderr: `unexpected command: ${cmd}` };
   });

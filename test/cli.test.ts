@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
+import { MAX_MEMBER_BYTES } from "../src/config.js";
+import { parseLsSizeBytes, parseWcBytes } from "../src/commands/member.js";
 import { VERSION } from "../src/version.js";
-import { defaultMock, mockRunner, runCli, SAMPLE_OBJECT } from "./helpers.js";
+import {
+  defaultMock,
+  lsSizeLine,
+  memberMock,
+  mockRunner,
+  runCli,
+  SAMPLE_MEMBER_CONTENT,
+  SAMPLE_OBJECT,
+} from "./helpers.js";
 
 describe("ibmi-axi CLI", () => {
   it("prints version on fast path flags", async () => {
@@ -81,6 +91,61 @@ describe("ibmi-axi CLI", () => {
     expect(result.stdout).not.toMatch(/should-redact/);
   });
 
+  it("member read refuses oversized members without --allow-large", async () => {
+    const oversized = MAX_MEMBER_BYTES + 1;
+    const seen: string[] = [];
+    const runner = memberMock({ sourceBytes: oversized });
+    const wrapped = mockRunner(async (cmd) => {
+      seen.push(cmd);
+      return runner.run(cmd);
+    });
+    const result = await runCli(
+      ["member", "read", "DENSION/QS36SRC", "AERA01", "--full"],
+      wrapped,
+    );
+    expect(result.code).not.toBe(0);
+    expect(result.stdout).toMatch(/MEMBER_TOO_LARGE|too large|max/i);
+    expect(result.stdout).toMatch(/allow-large/);
+    expect(seen.some((c) => c.includes("CPYTOSTMF"))).toBe(false);
+  });
+
+  it("member read allows oversized members with --allow-large", async () => {
+    const content = `${"A".repeat(MAX_MEMBER_BYTES + 50)}\n`;
+    const result = await runCli(
+      ["member", "read", "DENSION/QS36SRC", "AERA01", "--full", "--allow-large"],
+      memberMock({ sourceBytes: content.length, exportBytes: content.length, content }),
+    );
+    expect(result.code).toBe(0);
+    expect(result.stdout).toMatch(/allow_large:\s*true/);
+    expect(result.stdout).toMatch(/risk: large SSH/);
+  });
+
+  it("member read refuses when size cannot be determined", async () => {
+    const runner = mockRunner((cmd) => {
+      if (cmd.includes("ls -ln ") || /(^|\|\s*)ls -l /.test(cmd) || cmd.includes("wc -c")) {
+        return { code: 1, stdout: "", stderr: "missing" };
+      }
+      if (cmd.includes("CPYTOSTMF")) {
+        return { code: 0, stdout: "CPCA082\n", stderr: "" };
+      }
+      if (cmd.startsWith("rm -f") || cmd.startsWith("cat ")) {
+        return { code: 0, stdout: SAMPLE_MEMBER_CONTENT, stderr: "" };
+      }
+      return { code: 1, stdout: "", stderr: `unexpected: ${cmd}` };
+    });
+    const result = await runCli(["member", "read", "DENSION/QS36SRC", "AERA01"], runner);
+    expect(result.code).not.toBe(0);
+    expect(result.stdout).toMatch(/MEMBER_SIZE_UNKNOWN|could not be determined/i);
+    expect(result.stdout).toMatch(/allow-large/);
+  });
+
+  it("member help documents --allow-large and size cap", async () => {
+    const result = await runCli(["member", "--help"], defaultMock());
+    expect(result.code).toBe(0);
+    expect(result.stdout).toMatch(/--allow-large/);
+    expect(result.stdout).toMatch(new RegExp(String(MAX_MEMBER_BYTES)));
+  });
+
   it("ifs ls returns bounded entries", async () => {
     const result = await runCli(["ifs", "ls", "/home/LADWEIN"], defaultMock());
     expect(result.code).toBe(0);
@@ -128,5 +193,18 @@ describe("ibmi-axi CLI", () => {
     expect(result.stdout).toMatch(/doctor/);
     expect(result.stdout).toMatch(/member/);
     expect(result.stdout).toMatch(/ifs/);
+    expect(result.stdout).toMatch(/accept-new/);
+  });
+});
+
+describe("member size parsers", () => {
+  it("parses ls -l size field", () => {
+    expect(parseLsSizeBytes(lsSizeLine(2048))).toBe(2048);
+    expect(parseLsSizeBytes("total 4\n")).toBeUndefined();
+  });
+
+  it("parses wc -c output", () => {
+    expect(parseWcBytes("  4096 /tmp/x\n")).toBe(4096);
+    expect(parseWcBytes("not-a-size")).toBeUndefined();
   });
 });

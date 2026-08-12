@@ -52,6 +52,8 @@ npx -y ibmi-axi ifs ls /home/LADWEIN
 ## Tips
 
 - Output is TOON and token-efficient; long member/joblog text is truncated — use `--full`.
+- Member export is capped (1 MiB) with a remote size guard before `CPYTOSTMF`/cat. Oversized members are refused unless you pass `--allow-large` (risk: large SSH/temp/agent payload).
+- SSH uses `StrictHostKeyChecking=accept-new` (TOFU on first connect). Pin host keys in `~/.ssh/known_hosts` for production trusts.
 - Never scrape credential DBs; SSH keys/agent only.
 - Portable: any shop can point `--host` at their IBM i SSH endpoint.
 - Compile/deploy/5250/Bob remain outside this CLI (see `as400-ibm-i`).

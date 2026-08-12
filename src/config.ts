@@ -9,6 +9,8 @@ export const DEFAULT_JOBLOG_LIMIT = 30;
 export const DEFAULT_SPOOL_LIMIT = 20;
 export const DEFAULT_IFS_LIMIT = 100;
 export const MAX_LIMIT = 500;
+/** Hard cap for member export (CPYTOSTMF + cat). Override with --allow-large. */
+export const MAX_MEMBER_BYTES = 1_048_576;
 
 export interface IbmiConfig {
   host: string;

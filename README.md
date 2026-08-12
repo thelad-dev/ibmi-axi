@@ -37,6 +37,10 @@ ibmi-axi setup hooks
 Uses your local OpenSSH config and keys. Portable: any shop can point at their
 IBM i SSH endpoint.
 
+SSH sessions run with `BatchMode=yes` and `StrictHostKeyChecking=accept-new`
+(trust-on-first-use: unknown host keys are accepted and stored). For production,
+pin the IBM i host key in `~/.ssh/known_hosts` ahead of time.
+
 ## Commands
 
 ```sh
@@ -46,8 +50,20 @@ ibmi-axi obj show DENSION/AERA01 --type *PGM
 ibmi-axi joblog --job 044466/QSECOFR/QP0ZSPWP
 ibmi-axi spool --limit 10
 ibmi-axi member read DENSION/QS36SRC AERA01
+ibmi-axi member read DENSION/QS36SRC AERA01 --full
+ibmi-axi member read DENSION/QS36SRC AERA01 --full --allow-large
 ibmi-axi ifs ls /home/LADWEIN
 ```
+
+### Member size guard
+
+`member read` probes remote size (`ls` / `wc`) **before** `CPYTOSTMF` and again
+before `cat`. Exports above **1 048 576 bytes** (1 MiB) are refused unless you
+pass **`--allow-large`**.
+
+`--allow-large` is an explicit override: it can pull multi‑MB source over SSH
+into `/tmp` on the host and into the agent context. Use only when you accept
+that cost/risk.
 
 MVP is **read-only**. Future mutations will require an explicit `--confirm` flag
 and remain gated by operator policy (see skill `as400-ibm-i` for DENSION write

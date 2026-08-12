@@ -1,3 +1,5 @@
+import { MAX_MEMBER_BYTES } from "./config.js";
+
 export const DESCRIPTION =
   "Thin Live-Read AXI for IBM i — objects, joblogs, spools, members, and IFS over SSH";
 
@@ -7,9 +9,10 @@ commands[9]:
   (none)=home, doctor, obj, joblog, spool, member, ifs, setup, skill
 global_flags[2]:
   --host <ssh-host> (default as400 or IBMI_AXI_HOST), --help, -v/-V/--version
-notes[3]:
+notes[4]:
   Read-only by default. No silent writes. Future mutations require explicit --confirm.
   Credentials are never printed; SSH uses your local OpenSSH keys/agent.
+  SSH uses StrictHostKeyChecking=accept-new (TOFU); pin host keys in known_hosts for production.
   Portable: point --host at any IBM i with SSH + PASE.
 examples:
   ibmi-axi
@@ -51,13 +54,17 @@ examples:
   ibmi-axi spool --limit 10
   ibmi-axi spool --user QSECOFR
 `,
-  member: `usage: ibmi-axi member read <LIB/FILE> <MBR> [--full] [--limit <chars>] [--host <ssh-host>]
+  member: `usage: ibmi-axi member read <LIB/FILE> <MBR> [--full] [--limit <chars>] [--allow-large] [--host <ssh-host>]
 description: Read a source/data member via CPYTOSTMF (read-only, truncated by default)
 subcommands[1]: read
-flags[3]: --full, --limit <chars> (default 1500), --host <ssh-host>
+flags[4]: --full, --limit <chars> (default 1500), --allow-large (override ${MAX_MEMBER_BYTES}-byte export cap; risk: large SSH/temp/agent payload), --host <ssh-host>
+notes[2]:
+  Hard max export size is ${MAX_MEMBER_BYTES} bytes unless --allow-large is set.
+  Size is probed (ls/wc) before CPYTOSTMF and before cat; oversized members are refused.
 examples:
   ibmi-axi member read DENSION/QS36SRC AERA01
   ibmi-axi member read DENSION/QS36SRC AERA01 --full
+  ibmi-axi member read DENSION/QS36SRC AERA01 --full --allow-large
 `,
   ifs: `usage: ibmi-axi ifs ls <path> [--limit <n>] [--host <ssh-host>]
 description: Bounded IFS directory listing (read-only, no recursion by default)

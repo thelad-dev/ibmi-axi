@@ -28,6 +28,8 @@ Default research host: SSH alias `as400` (override `--host` / `IBMI_AXI_HOST`).
 ## Safety
 
 - Read-only MVP. No silent writes. Credentials must never appear in stdout (see `src/redact.ts`).
+- `member read` hard-caps export size (`MAX_MEMBER_BYTES` in `src/config.ts`); override only with `--allow-large`.
+- SSH uses `StrictHostKeyChecking=accept-new` (TOFU) — pin host keys for production (see README).
 - Future mutations need explicit `--confirm` plus operator write-gate policy.
 
 ## Maintaining this file
