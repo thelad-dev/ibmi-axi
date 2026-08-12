@@ -7,7 +7,7 @@ export const TOP_LEVEL_HELP = `usage: ibmi-axi [command] [args] [flags]
 description: ${DESCRIPTION}
 commands[9]:
   (none)=home, doctor, obj, joblog, spool, member, ifs, setup, skill
-global_flags[2]:
+global_flags[3]:
   --host <ssh-host> (default as400 or IBMI_AXI_HOST), --help, -v/-V/--version
 notes[4]:
   Read-only by default. No silent writes. Future mutations require explicit --confirm.
@@ -60,7 +60,7 @@ subcommands[1]: read
 flags[4]: --full, --limit <chars> (default 1500, max ${MAX_MEMBER_PREVIEW}), --allow-large (override ${MAX_MEMBER_BYTES}-byte export cap; risk: large SSH/temp/agent payload), --host <ssh-host>
 notes[2]:
   Hard max export size is ${MAX_MEMBER_BYTES} bytes unless --allow-large is set.
-  Size is probed (ls/wc) before CPYTOSTMF and before cat; oversized members are refused.
+  Size is probed (ls/wc) before CPYTOSTMF and before cat; oversized or undetermined sizes are refused.
 examples:
   ibmi-axi member read DENSION/QS36SRC AERA01
   ibmi-axi member read DENSION/QS36SRC AERA01 --full

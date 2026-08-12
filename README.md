@@ -58,8 +58,8 @@ ibmi-axi ifs ls /home/LADWEIN
 ### Member size guard
 
 `member read` probes remote size (`ls` / `wc`) **before** `CPYTOSTMF` and again
-before `cat`. Exports above **1 048 576 bytes** (1 MiB) are refused unless you
-pass **`--allow-large`**.
+before `cat`. Exports above **1 048 576 bytes** (1 MiB), or members whose size
+cannot be determined, are refused unless you pass **`--allow-large`**.
 
 `--allow-large` is an explicit override: it can pull multi‑MB source over SSH
 into `/tmp` on the host and into the agent context. Use only when you accept
