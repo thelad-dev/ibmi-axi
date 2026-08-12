@@ -1,0 +1,60 @@
+{
+  "name": "ibmi-axi",
+  "version": "0.1.0",
+  "description": "Thin Live-Read AXI CLI for IBM i — doctor, objects, joblogs, spools, members, IFS",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thelad-dev/ibmi-axi.git"
+  },
+  "homepage": "https://github.com/thelad-dev/ibmi-axi#readme",
+  "bugs": {
+    "url": "https://github.com/thelad-dev/ibmi-axi/issues"
+  },
+  "keywords": [
+    "ibmi",
+    "ibm-i",
+    "as400",
+    "axi",
+    "cli",
+    "toon",
+    "agent",
+    "ssh"
+  ],
+  "bin": {
+    "ibmi-axi": "dist/bin/ibmi-axi.js"
+  },
+  "files": [
+    "dist",
+    "skills/ibmi-axi",
+    "LICENSE",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/chmod-bin.mjs",
+    "build:skill": "tsx scripts/build-skill.ts",
+    "skill:check": "tsx scripts/build-skill.ts --check",
+    "dev": "tsx bin/ibmi-axi.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "npm run build && npm run skill:check"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@toon-format/toon": "^2.3.0",
+    "axi-sdk-js": "^0.1.10"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
