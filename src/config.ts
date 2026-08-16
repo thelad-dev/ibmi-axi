@@ -8,6 +8,9 @@ export const DEFAULT_MEMBER_PREVIEW = 1500;
 export const DEFAULT_JOBLOG_LIMIT = 30;
 export const DEFAULT_SPOOL_LIMIT = 20;
 export const DEFAULT_IFS_LIMIT = 100;
+/** Default top-job rows for `cpu --jobs` (0 = system metrics only; ACTIVE_JOB_INFO is slower). */
+export const DEFAULT_CPU_JOBS = 0;
+export const DEFAULT_MSGW_LIMIT = 20;
 export const MAX_LIMIT = 500;
 /** Max chars for member read --limit preview (non --full). */
 export const MAX_MEMBER_PREVIEW = 200_000;
