@@ -4,11 +4,14 @@ import type { SshRunner } from "./config.js";
 import { buildContext, type AppContext } from "./context.js";
 import { COMMAND_HELP, DESCRIPTION, TOP_LEVEL_HELP } from "./help.js";
 import { VERSION } from "./version.js";
+import { aspCommand } from "./commands/asp.js";
+import { cpuCommand } from "./commands/cpu.js";
 import { doctorCommand } from "./commands/doctor.js";
 import { homeCommand } from "./commands/home.js";
 import { ifsCommand } from "./commands/ifs.js";
 import { joblogCommand } from "./commands/joblog.js";
 import { memberCommand } from "./commands/member.js";
+import { msgwCommand } from "./commands/msgw.js";
 import { objCommand } from "./commands/obj.js";
 import { setupCommand } from "./commands/setup.js";
 import { skillCommand } from "./commands/skill.js";
@@ -66,6 +69,9 @@ export async function main(options: MainOptions = {}): Promise<void> {
     },
     commands: {
       doctor: (args, ctx) => doctorCommand(args, ctx),
+      asp: (args, ctx) => aspCommand(args, ctx),
+      cpu: (args, ctx) => cpuCommand(args, ctx),
+      msgw: (args, ctx) => msgwCommand(args, ctx),
       obj: (args, ctx) => objCommand(args, ctx),
       joblog: (args, ctx) => joblogCommand(args, ctx),
       spool: (args, ctx) => spoolCommand(args, ctx),

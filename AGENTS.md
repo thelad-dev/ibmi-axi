@@ -23,6 +23,7 @@ Default research host: SSH alias `as400` (override `--host` / `IBMI_AXI_HOST`).
 - Entry: `bin/ibmi-axi.ts` → `src/cli.ts` (`axi-sdk-js` `runAxiCli`)
 - Remote I/O: `src/ssh.ts` + injectable `SshRunner` (tests mock this; never hit a host in CI)
 - SQL via PASE `qsh`/`db2` (`buildDb2Remote` in `src/parse.ts`); member read via `CPYTOSTMF`
+- Live ops: `asp` ← `QSYS2.ASP_INFO`; `cpu` ← `SYSTEM_ACTIVITY_INFO` + `SYSTEM_STATUS_INFO` (+ optional `ACTIVE_JOB_INFO`); `msgw` ← `MESSAGE_QUEUE_INFO` inquiry + `ACTIVE_JOB_INFO` jobs in `MSGW`
 - Skill body is generated from `src/skill-content.ts` — keep `skills/ibmi-axi/SKILL.md` in sync (`npm run skill:check`)
 
 ## Safety

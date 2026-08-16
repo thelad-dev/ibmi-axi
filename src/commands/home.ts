@@ -41,9 +41,9 @@ export async function homeCommand(_args: string[], ctx: AppContext | undefined):
     mode: "live-read",
     help: [
       "Run `ibmi-axi doctor` to verify SSH and SQL readiness",
+      "Run `ibmi-axi asp` / `cpu` / `msgw` for ASP, CPU, and QSYSOPR MSGW live reads",
       "Run `ibmi-axi obj show LIB/OBJ --type *PGM` for object attributes",
       "Run `ibmi-axi member read LIB/FILE MBR` to read a source member",
-      "Run `ibmi-axi ifs ls /path` for a bounded IFS listing",
     ],
   };
 }

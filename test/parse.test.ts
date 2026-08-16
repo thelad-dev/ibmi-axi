@@ -8,9 +8,9 @@ import {
   shSingleQuote,
   sqlString,
 } from "../src/parse.js";
-import { parseDb2Table } from "../src/ssh.js";
+import { parseDb2Table, runDb2 } from "../src/ssh.js";
 import { redact, truncate } from "../src/redact.js";
-import { SAMPLE_OBJECT } from "./helpers.js";
+import { mockRunner, SAMPLE_MSGW_SECRET_SHIFT, SAMPLE_OBJECT } from "./helpers.js";
 
 describe("parse", () => {
   it("parses LIB/OBJ", () => {
@@ -62,6 +62,41 @@ describe("db2 table parse", () => {
     expect(table.rows).toHaveLength(1);
     expect(table.rows[0]?.OBJNAME).toBe("AERA01");
     expect(table.rows[0]?.OBJTYPE).toBe("*PGM");
+  });
+
+  it("runDb2 keeps trailing columns aligned when MESSAGE_TEXT contains secrets", async () => {
+    const shifted = parseDb2Table(redact(SAMPLE_MSGW_SECRET_SHIFT));
+    expect(shifted.rows[0]?.MESSAGE_KEY).not.toBe("DEADBEEF");
+    expect(shifted.rows[0]?.FROM_JOB).not.toBe("044466/QSECOFR/BATCH01");
+
+    const stdout = await runDb2(
+      {
+        host: "testhost",
+        sshBin: "ssh",
+        connectTimeoutSec: 1,
+        runner: mockRunner(() => ({ code: 0, stdout: SAMPLE_MSGW_SECRET_SHIFT, stderr: "" })),
+      },
+      "SELECT 1",
+    );
+    const table = parseDb2Table(stdout);
+    expect(table.rows[0]?.MESSAGE_KEY).toBe("DEADBEEF");
+    expect(table.rows[0]?.FROM_JOB).toBe("044466/QSECOFR/BATCH01");
+    expect(table.rows[0]?.FROM_USER).toBe("QSECOFR");
+    expect(table.rows[0]?.MESSAGE_TIMESTAMP).toBe("2026-08-16-12.00.00.000000");
+    expect(table.rows[0]?.MESSAGE_TEXT).toMatch(/password=<redacted>/);
+    expect(table.rows[0]?.MESSAGE_TEXT).not.toMatch(/supersecretVALUE12345/);
+  });
+
+  it("redacts secret-shaped cell values after fixed-width parse", () => {
+    const table = parseDb2Table(`
+OBJNAME    OBJTYPE  OBJTEXT
+---------- -------- --------------------------------
+AERA01     *PGM     lesen password=objSecret99
+`);
+    expect(table.rows[0]?.OBJNAME).toBe("AERA01");
+    expect(table.rows[0]?.OBJTYPE).toBe("*PGM");
+    expect(table.rows[0]?.OBJTEXT).toMatch(/password=<redacted>/);
+    expect(table.rows[0]?.OBJTEXT).not.toMatch(/objSecret99/);
   });
 });
 

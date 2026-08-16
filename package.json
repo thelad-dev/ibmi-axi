@@ -1,7 +1,7 @@
 {
   "name": "ibmi-axi",
   "version": "0.1.0",
-  "description": "Thin Live-Read AXI CLI for IBM i — doctor, objects, joblogs, spools, members, IFS",
+  "description": "Thin Live-Read AXI CLI for IBM i — doctor, ASP/CPU/MSGW, objects, joblogs, spools, members, IFS",
   "type": "module",
   "repository": {
     "type": "git",
