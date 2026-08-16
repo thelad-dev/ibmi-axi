@@ -2,9 +2,9 @@
 
 Thin **Live-Read** [AXI](https://github.com/kunchenguid/axi) CLI for IBM i.
 
-Token-efficient TOON stdout for agent workflows: doctor, object show, joblog and
-spool summaries, member read, and bounded IFS listing — over SSH. No silent
-writes. Credentials are never printed.
+Token-efficient TOON stdout for agent workflows: doctor, ASP/CPU/MSGW live reads,
+object show, joblog and spool summaries, member read, and bounded IFS listing —
+over SSH. No silent writes. Credentials are never printed.
 
 ## Install
 
@@ -46,6 +46,10 @@ pin the IBM i host key in `~/.ssh/known_hosts` ahead of time.
 ```sh
 ibmi-axi
 ibmi-axi doctor
+ibmi-axi asp
+ibmi-axi cpu
+ibmi-axi cpu --jobs 5
+ibmi-axi msgw
 ibmi-axi obj show DENSION/AERA01 --type *PGM
 ibmi-axi joblog --job 044466/QSECOFR/QP0ZSPWP
 ibmi-axi spool --limit 10
@@ -54,6 +58,9 @@ ibmi-axi member read DENSION/QS36SRC AERA01 --full
 ibmi-axi member read DENSION/QS36SRC AERA01 --full --allow-large
 ibmi-axi ifs ls /home/LADWEIN
 ```
+
+Optional live smoke (requires SSH alias / `--host`): `ibmi-axi asp`, `ibmi-axi cpu`,
+`ibmi-axi msgw` against a reachable IBM i. CI uses mocked SSH only.
 
 ### Member size guard
 

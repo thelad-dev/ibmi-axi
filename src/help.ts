@@ -1,12 +1,12 @@
 import { MAX_MEMBER_BYTES, MAX_MEMBER_PREVIEW } from "./config.js";
 
 export const DESCRIPTION =
-  "Thin Live-Read AXI for IBM i — objects, joblogs, spools, members, and IFS over SSH";
+  "Thin Live-Read AXI for IBM i — ASP/CPU/MSGW, objects, joblogs, spools, members, and IFS over SSH";
 
 export const TOP_LEVEL_HELP = `usage: ibmi-axi [command] [args] [flags]
 description: ${DESCRIPTION}
-commands[9]:
-  (none)=home, doctor, obj, joblog, spool, member, ifs, setup, skill
+commands[12]:
+  (none)=home, doctor, asp, cpu, msgw, obj, joblog, spool, member, ifs, setup, skill
 global_flags[3]:
   --host <ssh-host> (default as400 or IBMI_AXI_HOST), --help, -v/-V/--version
 notes[4]:
@@ -17,6 +17,9 @@ notes[4]:
 examples:
   ibmi-axi
   ibmi-axi doctor
+  ibmi-axi asp
+  ibmi-axi cpu
+  ibmi-axi msgw
   ibmi-axi obj show DENSION/AERA01 --type *PGM
   ibmi-axi joblog --job 044466/QSECOFR/QP0ZSPWP
   ibmi-axi spool --limit 10
@@ -31,6 +34,36 @@ flags[1]: --host <ssh-host>
 examples:
   ibmi-axi doctor
   ibmi-axi doctor --host as400
+`,
+  asp: `usage: ibmi-axi asp [--host <ssh-host>]
+description: ASP capacity overview (number, type, state, MB used/available, used %, threshold)
+flags[1]: --host <ssh-host>
+notes[1]:
+  Capacities are megabytes from QSYS2.ASP_INFO; used_pct is derived (capacity - available).
+examples:
+  ibmi-axi asp
+  ibmi-axi asp --host as400
+`,
+  cpu: `usage: ibmi-axi cpu [--jobs <n>] [--host <ssh-host>]
+description: Live CPU utilization (SYSTEM_ACTIVITY_INFO) plus partition status metrics
+flags[2]: --jobs <n> (default 0; top jobs by CPU_TIME ms via ACTIVE_JOB_INFO), --host <ssh-host>
+notes[2]:
+  Percent fields are labeled in output units. --jobs > 0 adds a slower ACTIVE_JOB_INFO pass.
+  Does not reset statistics (read-only).
+examples:
+  ibmi-axi cpu
+  ibmi-axi cpu --jobs 5
+`,
+  msgw: `usage: ibmi-axi msgw [--filter <inquiry|all>] [--limit <n>] [--full] [--host <ssh-host>]
+description: QSYSOPR messages with MSGW focus — inquiry (wait-for-reply) plus jobs in MSGW status
+flags[4]: --filter <inquiry|all> (default inquiry), --limit <n> (default 20, max 500), --full, --host <ssh-host>
+notes[2]:
+  Read-only: does not reply to inquiry messages. message key is HEX(MESSAGE_KEY) for identification.
+  Also lists active jobs with JOB_STATUS=MSGW (may be empty while inquiries remain).
+examples:
+  ibmi-axi msgw
+  ibmi-axi msgw --filter all --limit 20
+  ibmi-axi msgw --full
 `,
   obj: `usage: ibmi-axi obj show <LIB/OBJ> [--type <*PGM|*FILE|*ALL|...>] [--host <ssh-host>]
 description: Show IBM i object attributes via OBJECT_STATISTICS (read-only)

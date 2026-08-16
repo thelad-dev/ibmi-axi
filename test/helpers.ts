@@ -76,6 +76,56 @@ CPD0000     DIAGNOSTIC    20        Something password=supersecret   2026-08-12-
   2 RECORD(S) SELECTED.
 `;
 
+export const SAMPLE_ASP = `
+ASP_NUMBER  ASP_STATE  ASP_TYPE  TOTAL_CAPACITY  TOTAL_CAPACITY_AVAILABLE  STORAGE_THRESHOLD_PERCENTAGE  DEVICE_DESCRIPTION_NAME
+----------- ---------- --------- -------------- ------------------------- ----------------------------- ------------------------
+1           NONE       SYSTEM    1986456        1104549                   90                            
+2           ACTIVE     PRIMARY   500000         250000                    85                            IASP01
+
+  2 RECORD(S) SELECTED.
+`;
+
+export const SAMPLE_CPU_ACTIVITY = `
+AVERAGE_CPU_RATE  AVERAGE_CPU_UTILIZATION  MINIMUM_CPU_UTILIZATION  MAXIMUM_CPU_UTILIZATION
+----------------- ------------------------ ------------------------ ------------------------
+100.00            12.50                    10.00                    15.00
+
+  1 RECORD(S) SELECTED.
+`;
+
+export const SAMPLE_CPU_STATUS = `
+ELAPSED_CPU_USED  CURRENT_CPU_CAPACITY  ACTIVE_JOBS_IN_SYSTEM  TOTAL_JOBS_IN_SYSTEM
+----------------- --------------------- ---------------------- --------------------
+34.30             1.00                  302                    1822
+
+  1 RECORD(S) SELECTED.
+`;
+
+export const SAMPLE_CPU_JOBS = `
+JOB_NAME                 AUTHORIZATION_NAME  JOB_STATUS  CPU_TIME
+------------------------ ------------------- ----------- --------
+051085/DUSEND/AAWO01S52  DUSEND              RUN         15143567
+051096/DUSEND/AAZLVJOB52 QTCP                TIMA        406597
+
+  2 RECORD(S) SELECTED.
+`;
+
+export const SAMPLE_MSGW = `
+MESSAGE_ID  MESSAGE_TYPE  SEVERITY  MESSAGE_TEXT                     MESSAGE_TIMESTAMP          MESSAGE_KEY  FROM_JOB                 FROM_USER
+----------- ------------- --------- -------------------------------- -------------------------- ------------ ------------------------ ---------
+CPA0701     INQUIRY       99        Job password=supersecret waiting 2026-08-16-12.00.00.000000 0000ABCD     044466/QSECOFR/BATCH01   QSECOFR
+
+  1 RECORD(S) SELECTED.
+`;
+
+export const SAMPLE_MSGW_JOBS = `
+JOB_NAME                JOB_STATUS  AUTHORIZATION_NAME  SUBSYSTEM
+----------------------- ----------- ------------------- ---------
+044466/QSECOFR/BATCH01  MSGW        QSECOFR             QBATCH
+
+  1 RECORD(S) SELECTED.
+`;
+
 export const SAMPLE_MEMBER_CONTENT =
   "0001 H** SAMPLE MEMBER\n0002 C     HELLO\npassword=should-redact\n";
 
@@ -97,6 +147,24 @@ export function defaultMock(): SshRunner {
     }
     if (cmd.includes("ls /home")) {
       return { code: 0, stdout: "ok\n", stderr: "" };
+    }
+    if (cmd.includes("ASP_INFO")) {
+      return { code: 0, stdout: SAMPLE_ASP, stderr: "" };
+    }
+    if (cmd.includes("SYSTEM_ACTIVITY_INFO")) {
+      return { code: 0, stdout: SAMPLE_CPU_ACTIVITY, stderr: "" };
+    }
+    if (cmd.includes("SYSTEM_STATUS_INFO")) {
+      return { code: 0, stdout: SAMPLE_CPU_STATUS, stderr: "" };
+    }
+    if (cmd.includes("ACTIVE_JOB_INFO") && cmd.includes("CPU_TIME")) {
+      return { code: 0, stdout: SAMPLE_CPU_JOBS, stderr: "" };
+    }
+    if (cmd.includes("MESSAGE_QUEUE_INFO")) {
+      return { code: 0, stdout: SAMPLE_MSGW, stderr: "" };
+    }
+    if (cmd.includes("ACTIVE_JOB_INFO") && cmd.includes("MSGW")) {
+      return { code: 0, stdout: SAMPLE_MSGW_JOBS, stderr: "" };
     }
     if (cmd.includes("OBJECT_STATISTICS")) {
       return { code: 0, stdout: SAMPLE_OBJECT, stderr: "" };
