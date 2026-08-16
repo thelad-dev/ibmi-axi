@@ -45,7 +45,7 @@ examples:
   ibmi-axi asp --host as400
 `,
   cpu: `usage: ibmi-axi cpu [--jobs <n>] [--host <ssh-host>]
-description: Live CPU utilization (SYSTEM_ACTIVITY_INFO) plus partition status metrics
+description: Live CPU utilization (SYSTEM_ACTIVITY_INFO + SYSTEM_STATUS_INFO)
 flags[2]: --jobs <n> (default 0; top jobs by CPU_TIME ms via ACTIVE_JOB_INFO), --host <ssh-host>
 notes[2]:
   Percent fields are labeled in output units. --jobs > 0 adds a slower ACTIVE_JOB_INFO pass.
