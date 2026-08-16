@@ -9,6 +9,8 @@ import {
   mockRunner,
   runCli,
   SAMPLE_MEMBER_CONTENT,
+  SAMPLE_MSGW_JOBS,
+  SAMPLE_MSGW_SECRET_SHIFT,
   SAMPLE_OBJECT,
 } from "./helpers.js";
 
@@ -54,6 +56,30 @@ describe("ibmi-axi CLI", () => {
     expect(result.stdout).toMatch(/RPG36/);
   });
 
+  it("obj show redacts secrets in OBJTEXT without shifting other columns", async () => {
+    const secretObj = `
+OBJNAME    OBJTYPE  OBJATTRIBUTE  OBJSIZE  OBJTEXT                       OBJOWNER  LAST_USED_TIMESTAMP         OBJCREATED
+---------- -------- ------------- -------- ----------------------------- --------- --------------------------- --------------------------
+AERA01     *PGM     RPG36         98304    note password=objLeakSecret99 DENSION   2026-01-08-00.00.00.000000  2019-07-23-08.38.33.000000
+
+  1 RECORD(S) SELECTED.
+`;
+    const result = await runCli(
+      ["obj", "show", "DENSION/AERA01", "--type", "*PGM"],
+      mockRunner((cmd) => {
+        if (cmd.includes("OBJECT_STATISTICS")) {
+          return { code: 0, stdout: secretObj, stderr: "" };
+        }
+        return { code: 1, stdout: "", stderr: `unexpected: ${cmd}` };
+      }),
+    );
+    expect(result.code).toBe(0);
+    expect(result.stdout).toMatch(/AERA01/);
+    expect(result.stdout).toMatch(/DENSION/);
+    expect(result.stdout).toMatch(/password=<redacted>/);
+    expect(result.stdout).not.toMatch(/objLeakSecret99/);
+  });
+
   it("obj show rejects bad selectors", async () => {
     const result = await runCli(["obj", "show", "not-valid"], defaultMock());
     expect(result.code).toBe(2);
@@ -64,6 +90,96 @@ describe("ibmi-axi CLI", () => {
     const result = await runCli(["doctor", "--stat"], defaultMock());
     expect(result.code).toBe(2);
     expect(result.stdout).toMatch(/unknown flag --stat/);
+  });
+
+  it("asp returns capacity and derived used percent", async () => {
+    const result = await runCli(["asp"], defaultMock());
+    expect(result.code).toBe(0);
+    expect(result.stdout).toMatch(/asps/);
+    expect(result.stdout).toMatch(/used_pct/);
+    expect(result.stdout).toMatch(/1986456|capacity_mb/);
+  });
+
+  it("asp empty result uses the same units keys as success", async () => {
+    const emptyAsp = `
+ASP_NUMBER  ASP_STATE  ASP_TYPE  TOTAL_CAPACITY  TOTAL_CAPACITY_AVAILABLE  STORAGE_THRESHOLD_PERCENTAGE  DEVICE_DESCRIPTION_NAME
+----------- ---------- --------- -------------- ------------------------- ----------------------------- ------------------------
+
+  0 RECORD(S) SELECTED.
+`;
+    const runner = mockRunner((cmd) => {
+      if (cmd.includes("ASP_INFO")) {
+        return { code: 0, stdout: emptyAsp, stderr: "" };
+      }
+      return defaultMock().run(cmd);
+    });
+    const result = await runCli(["asp"], runner);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toMatch(/asps:\s*0/);
+    expect(result.stdout).toMatch(/capacity_mb:\s*MB/);
+    expect(result.stdout).toMatch(/available_mb:\s*MB/);
+    expect(result.stdout).toMatch(/used_mb:\s*MB/);
+    expect(result.stdout).toMatch(/used_pct:\s*percent/);
+    expect(result.stdout).not.toMatch(/^\s*capacity:\s*MB/m);
+    expect(result.stdout).not.toMatch(/^\s*available:\s*MB/m);
+    expect(result.stdout).not.toMatch(/^\s*used:\s*MB/m);
+  });
+
+  it("cpu returns labeled utilization percentages", async () => {
+    const result = await runCli(["cpu"], defaultMock());
+    expect(result.code).toBe(0);
+    expect(result.stdout).toMatch(/average_pct/);
+    expect(result.stdout).toMatch(/12\.5/);
+    expect(result.stdout).toMatch(/percent/);
+    expect(result.stdout).toMatch(/--jobs/);
+  });
+
+  it("cpu --jobs includes top jobs by cpu_ms", async () => {
+    const result = await runCli(["cpu", "--jobs", "2"], defaultMock());
+    expect(result.code).toBe(0);
+    expect(result.stdout).toMatch(/top_jobs/);
+    expect(result.stdout).toMatch(/AAWO01S52/);
+    expect(result.stdout).toMatch(/15143567/);
+  });
+
+  it("msgw lists inquiry messages and redacts secrets", async () => {
+    const result = await runCli(["msgw"], defaultMock());
+    expect(result.code).toBe(0);
+    expect(result.stdout).toMatch(/QSYS\/QSYSOPR/);
+    expect(result.stdout).toMatch(/CPA0701/);
+    expect(result.stdout).toMatch(/password=<redacted>/);
+    expect(result.stdout).not.toMatch(/supersecret/);
+    expect(result.stdout).toMatch(/jobs_msgw/);
+    expect(result.stdout).toMatch(/BATCH01/);
+  });
+
+  it("msgw keeps key and job when message text would shift under stream redaction", async () => {
+    const runner = mockRunner((cmd) => {
+      if (cmd.includes("MESSAGE_QUEUE_INFO")) {
+        return { code: 0, stdout: SAMPLE_MSGW_SECRET_SHIFT, stderr: "" };
+      }
+      if (cmd.includes("ACTIVE_JOB_INFO") && cmd.includes("MSGW")) {
+        return { code: 0, stdout: SAMPLE_MSGW_JOBS, stderr: "" };
+      }
+      return defaultMock().run(cmd);
+    });
+    const result = await runCli(["msgw"], runner);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toMatch(/DEADBEEF/);
+    expect(result.stdout).toMatch(/044466\/QSECOFR\/BATCH01/);
+    expect(result.stdout).toMatch(/password=<redacted>/);
+    expect(result.stdout).not.toMatch(/supersecretVALUE12345/);
+    const row = result.stdout
+      .split(/\r?\n/)
+      .find((line) => line.includes("DEADBEEF") && line.includes("CPA0701"));
+    expect(row).toBeTruthy();
+    expect(row).toMatch(/DEADBEEF,CPA0701,INQUIRY,99,044466\/QSECOFR\/BATCH01,QSECOFR,/);
+  });
+
+  it("msgw rejects unknown filter", async () => {
+    const result = await runCli(["msgw", "--filter", "nope"], defaultMock());
+    expect(result.code).toBe(2);
+    expect(result.stdout).toMatch(/invalid --filter/);
   });
 
   it("spool lists recent files", async () => {
@@ -227,6 +343,9 @@ describe("ibmi-axi CLI", () => {
     const result = await runCli(["--help"], defaultMock());
     expect(result.code).toBe(0);
     expect(result.stdout).toMatch(/doctor/);
+    expect(result.stdout).toMatch(/asp/);
+    expect(result.stdout).toMatch(/cpu/);
+    expect(result.stdout).toMatch(/msgw/);
     expect(result.stdout).toMatch(/member/);
     expect(result.stdout).toMatch(/ifs/);
     expect(result.stdout).toMatch(/accept-new/);
