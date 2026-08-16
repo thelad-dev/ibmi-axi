@@ -187,7 +187,7 @@ export function parseDb2Table(stdout: string): { columns: string[]; rows: Record
     let empty = true;
     for (const col of columns) {
       const raw = line.slice(col.start, col.end).trim();
-      row[col.name] = raw;
+      row[col.name] = redact(raw);
       if (raw) empty = false;
     }
     if (!empty) rows.push(row);

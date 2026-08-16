@@ -56,6 +56,30 @@ describe("ibmi-axi CLI", () => {
     expect(result.stdout).toMatch(/RPG36/);
   });
 
+  it("obj show redacts secrets in OBJTEXT without shifting other columns", async () => {
+    const secretObj = `
+OBJNAME    OBJTYPE  OBJATTRIBUTE  OBJSIZE  OBJTEXT                       OBJOWNER  LAST_USED_TIMESTAMP         OBJCREATED
+---------- -------- ------------- -------- ----------------------------- --------- --------------------------- --------------------------
+AERA01     *PGM     RPG36         98304    note password=objLeakSecret99 DENSION   2026-01-08-00.00.00.000000  2019-07-23-08.38.33.000000
+
+  1 RECORD(S) SELECTED.
+`;
+    const result = await runCli(
+      ["obj", "show", "DENSION/AERA01", "--type", "*PGM"],
+      mockRunner((cmd) => {
+        if (cmd.includes("OBJECT_STATISTICS")) {
+          return { code: 0, stdout: secretObj, stderr: "" };
+        }
+        return { code: 1, stdout: "", stderr: `unexpected: ${cmd}` };
+      }),
+    );
+    expect(result.code).toBe(0);
+    expect(result.stdout).toMatch(/AERA01/);
+    expect(result.stdout).toMatch(/DENSION/);
+    expect(result.stdout).toMatch(/password=<redacted>/);
+    expect(result.stdout).not.toMatch(/objLeakSecret99/);
+  });
+
   it("obj show rejects bad selectors", async () => {
     const result = await runCli(["obj", "show", "not-valid"], defaultMock());
     expect(result.code).toBe(2);

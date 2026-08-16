@@ -83,9 +83,20 @@ describe("db2 table parse", () => {
     expect(table.rows[0]?.FROM_JOB).toBe("044466/QSECOFR/BATCH01");
     expect(table.rows[0]?.FROM_USER).toBe("QSECOFR");
     expect(table.rows[0]?.MESSAGE_TIMESTAMP).toBe("2026-08-16-12.00.00.000000");
-    expect(table.rows[0]?.MESSAGE_TEXT).toMatch(/supersecretVALUE12345/);
-    expect(redact(table.rows[0]?.MESSAGE_TEXT ?? "")).toMatch(/password=<redacted>/);
-    expect(redact(table.rows[0]?.MESSAGE_TEXT ?? "")).not.toMatch(/supersecretVALUE12345/);
+    expect(table.rows[0]?.MESSAGE_TEXT).toMatch(/password=<redacted>/);
+    expect(table.rows[0]?.MESSAGE_TEXT).not.toMatch(/supersecretVALUE12345/);
+  });
+
+  it("redacts secret-shaped cell values after fixed-width parse", () => {
+    const table = parseDb2Table(`
+OBJNAME    OBJTYPE  OBJTEXT
+---------- -------- --------------------------------
+AERA01     *PGM     lesen password=objSecret99
+`);
+    expect(table.rows[0]?.OBJNAME).toBe("AERA01");
+    expect(table.rows[0]?.OBJTYPE).toBe("*PGM");
+    expect(table.rows[0]?.OBJTEXT).toMatch(/password=<redacted>/);
+    expect(table.rows[0]?.OBJTEXT).not.toMatch(/objSecret99/);
   });
 });
 
