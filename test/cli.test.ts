@@ -9,6 +9,8 @@ import {
   mockRunner,
   runCli,
   SAMPLE_MEMBER_CONTENT,
+  SAMPLE_MSGW_JOBS,
+  SAMPLE_MSGW_SECRET_SHIFT,
   SAMPLE_OBJECT,
 } from "./helpers.js";
 
@@ -74,6 +76,31 @@ describe("ibmi-axi CLI", () => {
     expect(result.stdout).toMatch(/1986456|capacity_mb/);
   });
 
+  it("asp empty result uses the same units keys as success", async () => {
+    const emptyAsp = `
+ASP_NUMBER  ASP_STATE  ASP_TYPE  TOTAL_CAPACITY  TOTAL_CAPACITY_AVAILABLE  STORAGE_THRESHOLD_PERCENTAGE  DEVICE_DESCRIPTION_NAME
+----------- ---------- --------- -------------- ------------------------- ----------------------------- ------------------------
+
+  0 RECORD(S) SELECTED.
+`;
+    const runner = mockRunner((cmd) => {
+      if (cmd.includes("ASP_INFO")) {
+        return { code: 0, stdout: emptyAsp, stderr: "" };
+      }
+      return defaultMock().run(cmd);
+    });
+    const result = await runCli(["asp"], runner);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toMatch(/asps:\s*0/);
+    expect(result.stdout).toMatch(/capacity_mb:\s*MB/);
+    expect(result.stdout).toMatch(/available_mb:\s*MB/);
+    expect(result.stdout).toMatch(/used_mb:\s*MB/);
+    expect(result.stdout).toMatch(/used_pct:\s*percent/);
+    expect(result.stdout).not.toMatch(/^\s*capacity:\s*MB/m);
+    expect(result.stdout).not.toMatch(/^\s*available:\s*MB/m);
+    expect(result.stdout).not.toMatch(/^\s*used:\s*MB/m);
+  });
+
   it("cpu returns labeled utilization percentages", async () => {
     const result = await runCli(["cpu"], defaultMock());
     expect(result.code).toBe(0);
@@ -100,6 +127,29 @@ describe("ibmi-axi CLI", () => {
     expect(result.stdout).not.toMatch(/supersecret/);
     expect(result.stdout).toMatch(/jobs_msgw/);
     expect(result.stdout).toMatch(/BATCH01/);
+  });
+
+  it("msgw keeps key and job when message text would shift under stream redaction", async () => {
+    const runner = mockRunner((cmd) => {
+      if (cmd.includes("MESSAGE_QUEUE_INFO")) {
+        return { code: 0, stdout: SAMPLE_MSGW_SECRET_SHIFT, stderr: "" };
+      }
+      if (cmd.includes("ACTIVE_JOB_INFO") && cmd.includes("MSGW")) {
+        return { code: 0, stdout: SAMPLE_MSGW_JOBS, stderr: "" };
+      }
+      return defaultMock().run(cmd);
+    });
+    const result = await runCli(["msgw"], runner);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toMatch(/DEADBEEF/);
+    expect(result.stdout).toMatch(/044466\/QSECOFR\/BATCH01/);
+    expect(result.stdout).toMatch(/password=<redacted>/);
+    expect(result.stdout).not.toMatch(/supersecretVALUE12345/);
+    const row = result.stdout
+      .split(/\r?\n/)
+      .find((line) => line.includes("DEADBEEF") && line.includes("CPA0701"));
+    expect(row).toBeTruthy();
+    expect(row).toMatch(/DEADBEEF,CPA0701,INQUIRY,99,044466\/QSECOFR\/BATCH01,QSECOFR,/);
   });
 
   it("msgw rejects unknown filter", async () => {

@@ -111,9 +111,18 @@ JOB_NAME                 AUTHORIZATION_NAME  JOB_STATUS  CPU_TIME
 `;
 
 export const SAMPLE_MSGW = `
-MESSAGE_ID  MESSAGE_TYPE  SEVERITY  MESSAGE_TEXT                     MESSAGE_TIMESTAMP          MESSAGE_KEY  FROM_JOB                 FROM_USER
------------ ------------- --------- -------------------------------- -------------------------- ------------ ------------------------ ---------
-CPA0701     INQUIRY       99        Job password=supersecret waiting 2026-08-16-12.00.00.000000 0000ABCD     044466/QSECOFR/BATCH01   QSECOFR
+MESSAGE_KEY  MESSAGE_ID  MESSAGE_TYPE  SEVERITY  MESSAGE_TIMESTAMP          FROM_JOB                 FROM_USER  MESSAGE_TEXT
+------------ ----------- ------------- --------- -------------------------- ------------------------ --------- --------------------------------
+0000ABCD     CPA0701     INQUIRY       99        2026-08-16-12.00.00.000000 044466/QSECOFR/BATCH01   QSECOFR   Job password=supersecret waiting
+
+  1 RECORD(S) SELECTED.
+`;
+
+/** Wider secret in MESSAGE_TEXT so stream-redact before parse would shift trailing columns. */
+export const SAMPLE_MSGW_SECRET_SHIFT = `
+MESSAGE_ID  MESSAGE_TYPE  SEVERITY  MESSAGE_TEXT                                         MESSAGE_TIMESTAMP          MESSAGE_KEY  FROM_JOB                 FROM_USER
+----------- ------------- --------- ---------------------------------------------------- -------------------------- ------------ ------------------------ ---------
+CPA0701     INQUIRY       99        Job password=supersecretVALUE12345 waiting for reply 2026-08-16-12.00.00.000000 DEADBEEF     044466/QSECOFR/BATCH01   QSECOFR
 
   1 RECORD(S) SELECTED.
 `;

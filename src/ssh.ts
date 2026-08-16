@@ -72,8 +72,8 @@ export function createSshRunner(config: IbmiConfig): SshRunner {
           clearTimeout(timer);
           resolve({
             code: code ?? 1,
-            stdout: redact(stdout),
-            stderr: redact(stderr),
+            stdout,
+            stderr,
           });
         });
       });
@@ -84,29 +84,37 @@ export function createSshRunner(config: IbmiConfig): SshRunner {
 export async function sshExec(
   config: IbmiConfig,
   remoteCommand: string,
-  options?: { timeoutMs?: number; allowNonZero?: boolean },
+  options?: { timeoutMs?: number; allowNonZero?: boolean; redactOutput?: boolean },
 ): Promise<SshResult> {
   const runner = createSshRunner(config);
   const result = await runner.run(remoteCommand, options);
-  if (!options?.allowNonZero && result.code !== 0) {
-    const detail = (result.stderr || result.stdout || "no output").trim().slice(0, 400);
-    throw new AxiError(`remote command failed on ${config.host} (exit ${result.code})`, "REMOTE_ERROR", [
+  const shouldRedact = options?.redactOutput !== false;
+  const safe: SshResult = shouldRedact
+    ? { ...result, stdout: redact(result.stdout), stderr: redact(result.stderr) }
+    : result;
+  if (!options?.allowNonZero && safe.code !== 0) {
+    const detail = redact((safe.stderr || safe.stdout || "no output").trim().slice(0, 400));
+    throw new AxiError(`remote command failed on ${config.host} (exit ${safe.code})`, "REMOTE_ERROR", [
       detail || "Run `ibmi-axi doctor` to check connectivity",
     ]);
   }
-  return result;
+  return safe;
 }
 
 /** Run a Db2 for i statement via qsh and return raw CLI text. */
 export async function runDb2(config: IbmiConfig, sql: string): Promise<string> {
   const remote = buildDb2Remote(sql);
-  const result = await sshExec(config, remote, { allowNonZero: true, timeoutMs: 60_000 });
+  const result = await sshExec(config, remote, {
+    allowNonZero: true,
+    timeoutMs: 60_000,
+    redactOutput: false,
+  });
   const combined = `${result.stdout}\n${result.stderr}`;
   const hasCliError = /CLI ERROR|SQLSTATE:\s*\d|NATIVE ERROR CODE/i.test(combined);
   // db2 may exit non-zero on zero-row result sets or CCSID noise; accept clean tabular output.
   const hasTable = /RECORD\(S\)\s+SELECTED/i.test(combined) || /^-{3,}/m.test(result.stdout);
   if (hasCliError || (result.code !== 0 && !hasTable)) {
-    const msg = extractDb2Error(combined) || `db2 failed (exit ${result.code})`;
+    const msg = redact(extractDb2Error(combined) || `db2 failed (exit ${result.code})`);
     throw new AxiError(msg, "SQL_ERROR", [
       "Verify the object/library exists and your SSH user has authority",
       "Run `ibmi-axi doctor` to confirm SQL path readiness",

@@ -21,7 +21,7 @@ export async function aspCommand(args: string[], ctx: AppContext | undefined): P
     return {
       asps: 0,
       message: "0 ASPs found",
-      units: { capacity: "MB", available: "MB", used: "MB", used_pct: "percent" },
+      units: { capacity_mb: "MB", available_mb: "MB", used_mb: "MB", used_pct: "percent" },
       help: ["Run `ibmi-axi doctor` if SQL probes fail"],
     };
   }
