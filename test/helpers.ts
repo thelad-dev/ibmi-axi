@@ -53,7 +53,7 @@ OS_VERSION  OS_RELEASE  HOST_NAME
 export const SAMPLE_OBJECT = `
 OBJNAME    OBJTYPE  OBJATTRIBUTE  OBJSIZE  OBJTEXT                 OBJOWNER  LAST_USED_TIMESTAMP         OBJCREATED
 ---------- -------- ------------- -------- ----------------------- --------- --------------------------- --------------------------
-AERA01     *PGM     RPG36         98304    lesen File von aera     DENSION   2026-01-08-00.00.00.000000  2019-07-23-08.38.33.000000
+MYOBJ      *PGM     RPG36         98304    sample object text      MYLIB    2026-01-08-00.00.00.000000  2019-07-23-08.38.33.000000
 
   1 RECORD(S) SELECTED.
 `;
@@ -210,10 +210,10 @@ export function defaultMock(): SshRunner {
       return {
         code: 0,
         stdout: `total 8
-drwxr-xr-x  3 ladwein 0 8192 Jun  9 12:38 .
+drwxr-xr-x  3 user    0 8192 Jun  9 12:38 .
 drwxr-xr-x 26 qsys    0 8192 Aug  5 10:09 ..
--rw-r--r--  1 ladwein 0   63 May 26 12:21 get_stat00j9xx.sql
-drwxr-xr-x  2 ladwein 0 8192 Jun  9 12:38 .cache
+-rw-r--r--  1 user    0   63 May 26 12:21 get_stat00j9xx.sql
+drwxr-xr-x  2 user    0 8192 Jun  9 12:38 .cache
 `,
         stderr: "",
       };

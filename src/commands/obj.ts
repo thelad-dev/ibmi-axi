@@ -33,7 +33,7 @@ export async function objCommand(args: string[], ctx: AppContext | undefined): P
   const positionals = getPositional(local);
   if (positionals.length !== 1) {
     throw new AxiError("obj show requires exactly one LIB/OBJ argument", "VALIDATION_ERROR", [
-      "Run `ibmi-axi obj show DENSION/AERA01 --type *PGM`",
+      "Run `ibmi-axi obj show MYLIB/MYOBJ --type *PGM`",
     ]);
   }
   const { library, object } = parseLibObj(positionals[0]!);

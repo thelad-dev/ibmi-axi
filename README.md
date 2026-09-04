@@ -50,13 +50,13 @@ ibmi-axi asp
 ibmi-axi cpu
 ibmi-axi cpu --jobs 5
 ibmi-axi msgw
-ibmi-axi obj show DENSION/AERA01 --type *PGM
+ibmi-axi obj show MYLIB/MYOBJ --type *PGM
 ibmi-axi joblog --job 044466/QSECOFR/QP0ZSPWP
 ibmi-axi spool --limit 10
-ibmi-axi member read DENSION/QS36SRC AERA01
-ibmi-axi member read DENSION/QS36SRC AERA01 --full
-ibmi-axi member read DENSION/QS36SRC AERA01 --full --allow-large
-ibmi-axi ifs ls /home/LADWEIN
+ibmi-axi member read MYLIB/QS36SRC MYOBJ
+ibmi-axi member read MYLIB/QS36SRC MYOBJ --full
+ibmi-axi member read MYLIB/QS36SRC MYOBJ --full --allow-large
+ibmi-axi ifs ls /home/USER
 ```
 
 Optional live smoke (requires SSH alias / `--host`): `ibmi-axi asp`, `ibmi-axi cpu`,
@@ -73,7 +73,7 @@ into `/tmp` on the host and into the agent context. Use only when you accept
 that cost/risk.
 
 MVP is **read-only**. Future mutations will require an explicit `--confirm` flag
-and remain gated by operator policy (see skill `as400-ibm-i` for DENSION write
+and remain gated by operator policy (see skill `as400-ibm-i` for write
 rules). This CLI does not replace MCP-IBMiDocs (documentation) or Bob.
 
 ## Development

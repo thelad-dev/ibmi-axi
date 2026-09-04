@@ -20,11 +20,11 @@ examples:
   ibmi-axi asp
   ibmi-axi cpu
   ibmi-axi msgw
-  ibmi-axi obj show DENSION/AERA01 --type *PGM
+  ibmi-axi obj show MYLIB/MYOBJ --type *PGM
   ibmi-axi joblog --job 044466/QSECOFR/QP0ZSPWP
   ibmi-axi spool --limit 10
-  ibmi-axi member read DENSION/QS36SRC AERA01
-  ibmi-axi ifs ls /home/LADWEIN
+  ibmi-axi member read MYLIB/QS36SRC MYOBJ
+  ibmi-axi ifs ls /home/USER
 `;
 
 export const COMMAND_HELP: Record<string, string> = {
@@ -70,7 +70,7 @@ description: Show IBM i object attributes via OBJECT_STATISTICS (read-only)
 subcommands[1]: show
 flags[2]: --type <objtype> (default *ALL), --host <ssh-host>
 examples:
-  ibmi-axi obj show DENSION/AERA01 --type *PGM
+  ibmi-axi obj show MYLIB/MYOBJ --type *PGM
   ibmi-axi obj show QGPL/QDFTJOBD --type *JOBD
 `,
   joblog: `usage: ibmi-axi joblog [--job <NUMBER/USER/NAME>] [--limit <n>] [--full] [--host <ssh-host>]
@@ -95,17 +95,17 @@ notes[2]:
   Hard max export size is ${MAX_MEMBER_BYTES} bytes unless --allow-large is set.
   Size is probed (ls/wc) before CPYTOSTMF and before cat; oversized or undetermined sizes are refused.
 examples:
-  ibmi-axi member read DENSION/QS36SRC AERA01
-  ibmi-axi member read DENSION/QS36SRC AERA01 --full
-  ibmi-axi member read DENSION/QS36SRC AERA01 --full --allow-large
+  ibmi-axi member read MYLIB/QS36SRC MYOBJ
+  ibmi-axi member read MYLIB/QS36SRC MYOBJ --full
+  ibmi-axi member read MYLIB/QS36SRC MYOBJ --full --allow-large
 `,
   ifs: `usage: ibmi-axi ifs ls <path> [--limit <n>] [--host <ssh-host>]
 description: Bounded IFS directory listing (read-only, no recursion by default)
 subcommands[1]: ls
 flags[2]: --limit <n> (default 100, max 500), --host <ssh-host>
 examples:
-  ibmi-axi ifs ls /home/LADWEIN
-  ibmi-axi ifs ls /QSYS.LIB/DENSION.LIB --limit 50
+  ibmi-axi ifs ls /home/USER
+  ibmi-axi ifs ls /QSYS.LIB/MYLIB.LIB --limit 50
 `,
   setup: `usage: ibmi-axi setup hooks
 description: Install session-start hooks for Claude Code, Codex, and OpenCode (explicit opt-in)

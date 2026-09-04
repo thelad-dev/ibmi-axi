@@ -47,7 +47,7 @@ export async function memberCommand(args: string[], ctx: AppContext | undefined)
     throw new AxiError(
       "member read requires LIB/FILE and member name",
       "VALIDATION_ERROR",
-      ["Run `ibmi-axi member read DENSION/QS36SRC AERA01`"],
+      ["Run `ibmi-axi member read MYLIB/QS36SRC MYOBJ`"],
     );
   }
 

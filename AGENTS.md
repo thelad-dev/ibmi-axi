@@ -4,7 +4,7 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 
 ## What this is
 
-Thin **Live-Read** AXI CLI for IBM i over SSH. Docs stay in MCP-IBMiDocs; DENSION write/deploy policy stays in skill `as400-ibm-i`. Bob is out of scope.
+Thin **Live-Read** AXI CLI for IBM i over SSH. Docs stay in MCP-IBMiDocs; operator write/deploy policy stays in skill `as400-ibm-i`. Bob is out of scope.
 
 ## Commands
 
