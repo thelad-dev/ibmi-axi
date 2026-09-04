@@ -11,9 +11,11 @@ import {
 import { DEFAULT_IFS_LIMIT, MAX_LIMIT } from "../config.js";
 import { assertSafePath, shSingleQuote } from "../parse.js";
 import { sshExec } from "../ssh.js";
+import { requireSsh } from "../backend.js";
 
 export async function ifsCommand(args: string[], ctx: AppContext | undefined): Promise<AxiRenderable> {
   if (!ctx) throw new Error("missing context");
+  requireSsh(ctx.config, "ifs");
   const local = [...args];
   takeBoolFlag(local, "--help");
 

@@ -4,7 +4,7 @@ Thin **Live-Read** [AXI](https://github.com/kunchenguid/axi) CLI for IBM i.
 
 Token-efficient TOON stdout for agent workflows: doctor, ASP/CPU/MSGW live reads,
 object show, joblog and spool summaries, member read, and bounded IFS listing —
-over SSH. No silent writes. Credentials are never printed.
+over SSH (default) or optional IBM i MCP (stdio). No silent writes. Credentials are never printed.
 
 ## Install
 
@@ -26,13 +26,15 @@ Session hooks (explicit opt-in):
 ibmi-axi setup hooks
 ```
 
-## Host configuration
+## Host / Transport configuration
 
 | Source | Value |
 |--------|--------|
-| Default | SSH host alias `as400` |
-| Flag | `--host <ssh-host>` after the command |
-| Env | `IBMI_AXI_HOST`, optional `IBMI_AXI_SSH`, `IBMI_AXI_CONNECT_TIMEOUT` |
+| Default | SSH host alias `as400` (transport=ssh) |
+| Flag | `--host <ssh-host>` / `--transport ssh|mcp` after the command |
+| Env | `IBMI_AXI_HOST`, `IBMI_AXI_TRANSPORT=ssh|mcp`, `IBMI_AXI_SSH`, `IBMI_AXI_CONNECT_TIMEOUT` |
+
+Optional MCP backend (category-A ops only): uses `@modelcontextprotocol/sdk` (Apache-2.0) stdio client to `ibmi-mcp-server` (Mapepire on 8076). Env: `DB2i_HOST`/`IBMI_AXI_MCP_HOST`, `DB2i_USER`/`IBMI_AXI_MCP_USER`, `DB2i_PASS`/`IBMI_AXI_MCP_PASS`, `DB2i_PORT=8076`/`IBMI_AXI_MCP_PORT`. B-ops (member read, ifs ls) error with "requires SSH backend". MIT license kept for this CLI.
 
 Uses your local OpenSSH config and keys. Portable: any shop can point at their
 IBM i SSH endpoint.
