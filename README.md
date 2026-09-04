@@ -34,7 +34,7 @@ ibmi-axi setup hooks
 | Flag | `--host <ssh-host>` / `--transport ssh|mcp` after the command |
 | Env | `IBMI_AXI_HOST`, `IBMI_AXI_TRANSPORT=ssh|mcp`, `IBMI_AXI_SSH`, `IBMI_AXI_CONNECT_TIMEOUT` |
 
-Optional MCP backend (category-A ops only): uses `@modelcontextprotocol/sdk` (Apache-2.0) stdio client to `ibmi-mcp-server` (Mapepire on 8076). Env: `DB2i_HOST`/`IBMI_AXI_MCP_HOST`, `DB2i_USER`/`IBMI_AXI_MCP_USER`, `DB2i_PASS`/`IBMI_AXI_MCP_PASS`, `DB2i_PORT=8076`/`IBMI_AXI_MCP_PORT`. B-ops (member read, ifs ls) error with "requires SSH backend". MIT license kept for this CLI.
+Optional MCP backend (category-A ops only): uses `@modelcontextprotocol/sdk` (Apache-2.0) stdio or HTTP client to `ibmi-mcp-server` (Mapepire 8076 or HTTP @/mcp). Env: `IBMI_AXI_MCP_MODE=stdio|http` (default stdio), `IBMI_AXI_MCP_URL=http://127.0.0.1:3010/mcp` (implies http), plus DB2i_* / IBMI_AXI_MCP_* for auth. Example (HTTP, tunnel if remote): `ssh -L 3010:127.0.0.1:3010 vm88` then `IBMI_AXI_MCP_URL=http://127.0.0.1:3010/mcp ibmi-axi --transport mcp doctor`. B-ops error "requires SSH backend". MIT kept.
 
 Uses your local OpenSSH config and keys. Portable: any shop can point at their
 IBM i SSH endpoint.

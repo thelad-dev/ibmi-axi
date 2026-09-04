@@ -38,13 +38,17 @@ export interface SshRunner {
 }
 
 export type Transport = "ssh" | "mcp";
+export type McpMode = "stdio" | "http";
 
 export interface McpConfig {
   host: string;
   user?: string;
   pass?: string;
   port: number;
-  /** Command to spawn the MCP server (e.g. ["npx", "-y", "ibmi-mcp-server"]). */
+  mode: McpMode;
+  /** For http mode: full URL e.g. http://127.0.0.1:3010/mcp */
+  url?: string;
+  /** For stdio: Command to spawn (e.g. ["npx", "-y", "ibmi-mcp-server"]). */
   serverCmd: string[];
 }
 
@@ -133,12 +137,16 @@ export function resolveConfig(input: ResolveConfigInput): IbmiConfig {
     const mcpPass = env.DB2i_PASS ?? env.IBMI_AXI_MCP_PASS;
     const mcpPortRaw = env.DB2i_PORT ?? env.IBMI_AXI_MCP_PORT ?? "8076";
     const port = /^\d+$/.test(mcpPortRaw) ? Number.parseInt(mcpPortRaw, 10) : 8076;
+    const modeFromEnv = (env.IBMI_AXI_MCP_MODE as McpMode) || (env.IBMI_AXI_MCP_URL ? "http" : "stdio");
+    const mcpUrl = env.IBMI_AXI_MCP_URL;
     const serverCmd = (env.IBMI_AXI_MCP_SERVER_CMD ?? "npx -y ibmi-mcp-server").split(/\s+/).filter(Boolean);
     mcp = {
       host: mcpHost.trim(),
       user: mcpUser?.trim(),
       pass: mcpPass,
       port: port || 8076,
+      mode: modeFromEnv === "http" ? "http" : "stdio",
+      url: mcpUrl,
       serverCmd: serverCmd.length ? serverCmd : ["npx", "-y", "ibmi-mcp-server"],
     };
   }
