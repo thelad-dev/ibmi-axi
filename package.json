@@ -19,7 +19,9 @@
     "cli",
     "toon",
     "agent",
-    "ssh"
+    "ssh",
+    "mcp",
+    "modelcontextprotocol"
   ],
   "bin": {
     "ibmi-axi": "dist/bin/ibmi-axi.js"
@@ -48,6 +50,7 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@toon-format/toon": "^2.3.0",
     "axi-sdk-js": "^0.1.10"
   },

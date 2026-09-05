@@ -47,11 +47,11 @@ describe("ibmi-axi CLI", () => {
 
   it("obj show returns object attributes", async () => {
     const result = await runCli(
-      ["obj", "show", "DENSION/AERA01", "--type", "*PGM"],
+      ["obj", "show", "MYLIB/MYOBJ", "--type", "*PGM"],
       defaultMock(),
     );
     expect(result.code).toBe(0);
-    expect(result.stdout).toMatch(/AERA01/);
+    expect(result.stdout).toMatch(/MYOBJ/);
     expect(result.stdout).toMatch(/\*PGM/);
     expect(result.stdout).toMatch(/RPG36/);
   });
@@ -60,12 +60,12 @@ describe("ibmi-axi CLI", () => {
     const secretObj = `
 OBJNAME    OBJTYPE  OBJATTRIBUTE  OBJSIZE  OBJTEXT                       OBJOWNER  LAST_USED_TIMESTAMP         OBJCREATED
 ---------- -------- ------------- -------- ----------------------------- --------- --------------------------- --------------------------
-AERA01     *PGM     RPG36         98304    note password=objLeakSecret99 DENSION   2026-01-08-00.00.00.000000  2019-07-23-08.38.33.000000
+MYOBJ      *PGM     RPG36         98304    note password=objLeakSecret99 MYLIB    2026-01-08-00.00.00.000000  2019-07-23-08.38.33.000000
 
   1 RECORD(S) SELECTED.
 `;
     const result = await runCli(
-      ["obj", "show", "DENSION/AERA01", "--type", "*PGM"],
+      ["obj", "show", "MYLIB/MYOBJ", "--type", "*PGM"],
       mockRunner((cmd) => {
         if (cmd.includes("OBJECT_STATISTICS")) {
           return { code: 0, stdout: secretObj, stderr: "" };
@@ -74,8 +74,8 @@ AERA01     *PGM     RPG36         98304    note password=objLeakSecret99 DENSION
       }),
     );
     expect(result.code).toBe(0);
-    expect(result.stdout).toMatch(/AERA01/);
-    expect(result.stdout).toMatch(/DENSION/);
+    expect(result.stdout).toMatch(/MYOBJ/);
+    expect(result.stdout).toMatch(/MYLIB/);
     expect(result.stdout).toMatch(/password=<redacted>/);
     expect(result.stdout).not.toMatch(/objLeakSecret99/);
   });
@@ -198,7 +198,7 @@ ASP_NUMBER  ASP_STATE  ASP_TYPE  TOTAL_CAPACITY  TOTAL_CAPACITY_AVAILABLE  STORA
 
   it("member read returns truncated content and redacts secrets", async () => {
     const result = await runCli(
-      ["member", "read", "DENSION/QS36SRC", "AERA01"],
+      ["member", "read", "MYLIB/QS36SRC", "MYOBJ"],
       defaultMock(),
     );
     expect(result.code).toBe(0);
@@ -216,7 +216,7 @@ ASP_NUMBER  ASP_STATE  ASP_TYPE  TOTAL_CAPACITY  TOTAL_CAPACITY_AVAILABLE  STORA
       return runner.run(cmd);
     });
     const result = await runCli(
-      ["member", "read", "DENSION/QS36SRC", "AERA01", "--full"],
+      ["member", "read", "MYLIB/QS36SRC", "MYOBJ", "--full"],
       wrapped,
     );
     expect(result.code).not.toBe(0);
@@ -228,7 +228,7 @@ ASP_NUMBER  ASP_STATE  ASP_TYPE  TOTAL_CAPACITY  TOTAL_CAPACITY_AVAILABLE  STORA
   it("member read allows oversized members with --allow-large", async () => {
     const content = `${"A".repeat(MAX_MEMBER_BYTES + 50)}\n`;
     const result = await runCli(
-      ["member", "read", "DENSION/QS36SRC", "AERA01", "--full", "--allow-large"],
+      ["member", "read", "MYLIB/QS36SRC", "MYOBJ", "--full", "--allow-large"],
       memberMock({ sourceBytes: content.length, exportBytes: content.length, content }),
     );
     expect(result.code).toBe(0);
@@ -249,7 +249,7 @@ ASP_NUMBER  ASP_STATE  ASP_TYPE  TOTAL_CAPACITY  TOTAL_CAPACITY_AVAILABLE  STORA
       }
       return { code: 1, stdout: "", stderr: `unexpected: ${cmd}` };
     });
-    const result = await runCli(["member", "read", "DENSION/QS36SRC", "AERA01"], runner);
+    const result = await runCli(["member", "read", "MYLIB/QS36SRC", "MYOBJ"], runner);
     expect(result.code).not.toBe(0);
     expect(result.stdout).toMatch(/MEMBER_SIZE_UNKNOWN|could not be determined/i);
     expect(result.stdout).toMatch(/allow-large/);
@@ -267,7 +267,7 @@ ASP_NUMBER  ASP_STATE  ASP_TYPE  TOTAL_CAPACITY  TOTAL_CAPACITY_AVAILABLE  STORA
       return runner.run(cmd);
     });
     const result = await runCli(
-      ["member", "read", "DENSION/QS36SRC", "AERA01", "--full"],
+      ["member", "read", "MYLIB/QS36SRC", "MYOBJ", "--full"],
       wrapped,
     );
     expect(result.code).not.toBe(0);
@@ -281,7 +281,7 @@ ASP_NUMBER  ASP_STATE  ASP_TYPE  TOTAL_CAPACITY  TOTAL_CAPACITY_AVAILABLE  STORA
     const marker = "X";
     const content = `${marker.repeat(12_000)}\n`;
     const result = await runCli(
-      ["member", "read", "DENSION/QS36SRC", "AERA01", "--limit", "11000"],
+      ["member", "read", "MYLIB/QS36SRC", "MYOBJ", "--limit", "11000"],
       memberMock({ sourceBytes: content.length, exportBytes: content.length, content }),
     );
     expect(result.code).toBe(0);
@@ -299,7 +299,7 @@ ASP_NUMBER  ASP_STATE  ASP_TYPE  TOTAL_CAPACITY  TOTAL_CAPACITY_AVAILABLE  STORA
   });
 
   it("ifs ls returns bounded entries", async () => {
-    const result = await runCli(["ifs", "ls", "/home/LADWEIN"], defaultMock());
+    const result = await runCli(["ifs", "ls", "/home/USER"], defaultMock());
     expect(result.code).toBe(0);
     expect(result.stdout).toMatch(/get_stat00j9xx\.sql/);
     expect(result.stdout).toMatch(/entries/);
@@ -322,12 +322,12 @@ ASP_NUMBER  ASP_STATE  ASP_TYPE  TOTAL_CAPACITY  TOTAL_CAPACITY_AVAILABLE  STORA
     });
     // host is consumed in resolveConfig; runner is injected so we just ensure command works
     const result = await runCli(
-      ["obj", "show", "DENSION/AERA01", "--host", "otherhost", "--type", "*PGM"],
+      ["obj", "show", "MYLIB/MYOBJ", "--host", "otherhost", "--type", "*PGM"],
       runner,
       { ...process.env },
     );
     expect(result.code).toBe(0);
-    expect(result.stdout).toMatch(/AERA01/);
+    expect(result.stdout).toMatch(/MYOBJ/);
   });
 
   it("skill generate --check fails when missing", async () => {

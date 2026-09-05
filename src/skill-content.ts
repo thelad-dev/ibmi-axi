@@ -12,7 +12,7 @@ description: >
 
 Thin Live-Read AXI for IBM i. Prefer this over ad-hoc \`ssh as400\` + \`system\` for
 recurring read ops. Docs search stays with MCP-IBMiDocs / \`ibmi-docs\`; narrative
-DENSION policy stays in skill \`as400-ibm-i\`. Bob is out of scope.
+operator policy stays in skill \`as400-ibm-i\`. Bob is out of scope.
 
 You do not need a global install — invoke with \`npx -y ibmi-axi <command>\`.
 If output suggests a follow-up starting with \`ibmi-axi\`, run it as \`npx -y ibmi-axi ...\`.
@@ -51,11 +51,11 @@ npx -y ibmi-axi asp
 npx -y ibmi-axi cpu
 npx -y ibmi-axi cpu --jobs 5
 npx -y ibmi-axi msgw
-npx -y ibmi-axi obj show DENSION/AERA01 --type *PGM
+npx -y ibmi-axi obj show MYLIB/MYOBJ --type *PGM
 npx -y ibmi-axi joblog --job 044466/QSECOFR/QP0ZSPWP
 npx -y ibmi-axi spool --limit 10
-npx -y ibmi-axi member read DENSION/QS36SRC AERA01
-npx -y ibmi-axi ifs ls /home/LADWEIN
+npx -y ibmi-axi member read MYLIB/QS36SRC MYOBJ
+npx -y ibmi-axi ifs ls /home/USER
 \`\`\`
 
 ## Tips

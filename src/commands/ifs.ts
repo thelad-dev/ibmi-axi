@@ -11,16 +11,18 @@ import {
 import { DEFAULT_IFS_LIMIT, MAX_LIMIT } from "../config.js";
 import { assertSafePath, shSingleQuote } from "../parse.js";
 import { sshExec } from "../ssh.js";
+import { requireSsh } from "../backend.js";
 
 export async function ifsCommand(args: string[], ctx: AppContext | undefined): Promise<AxiRenderable> {
   if (!ctx) throw new Error("missing context");
+  requireSsh(ctx.config, "ifs");
   const local = [...args];
   takeBoolFlag(local, "--help");
 
   const sub = local[0];
   if (!sub || sub.startsWith("-")) {
     throw new AxiError("ifs requires a subcommand", "VALIDATION_ERROR", [
-      "Run `ibmi-axi ifs ls /home/LADWEIN`",
+      "Run `ibmi-axi ifs ls /home/USER`",
     ]);
   }
   if (sub !== "ls") {
@@ -35,7 +37,7 @@ export async function ifsCommand(args: string[], ctx: AppContext | undefined): P
   const positionals = getPositional(local);
   if (positionals.length !== 1) {
     throw new AxiError("ifs ls requires exactly one absolute path", "VALIDATION_ERROR", [
-      "Run `ibmi-axi ifs ls /home/LADWEIN`",
+      "Run `ibmi-axi ifs ls /home/USER`",
     ]);
   }
   const path = assertSafePath(positionals[0]!);

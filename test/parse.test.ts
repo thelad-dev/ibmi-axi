@@ -14,17 +14,17 @@ import { mockRunner, SAMPLE_MSGW_SECRET_SHIFT, SAMPLE_OBJECT } from "./helpers.j
 
 describe("parse", () => {
   it("parses LIB/OBJ", () => {
-    expect(parseLibObj("dension/aera01")).toEqual({
-      library: "DENSION",
-      object: "AERA01",
+    expect(parseLibObj("mylib/myobj")).toEqual({
+      library: "MYLIB",
+      object: "MYOBJ",
     });
   });
 
   it("parses member targets", () => {
-    expect(parseMemberTarget("DENSION/QS36SRC", "aera01")).toEqual({
-      library: "DENSION",
+    expect(parseMemberTarget("MYLIB/QS36SRC", "myobj")).toEqual({
+      library: "MYLIB",
       file: "QS36SRC",
-      member: "AERA01",
+      member: "MYOBJ",
     });
   });
 
@@ -60,7 +60,7 @@ describe("db2 table parse", () => {
   it("parses aligned db2 output", () => {
     const table = parseDb2Table(SAMPLE_OBJECT);
     expect(table.rows).toHaveLength(1);
-    expect(table.rows[0]?.OBJNAME).toBe("AERA01");
+    expect(table.rows[0]?.OBJNAME).toBe("MYOBJ");
     expect(table.rows[0]?.OBJTYPE).toBe("*PGM");
   });
 
@@ -91,9 +91,9 @@ describe("db2 table parse", () => {
     const table = parseDb2Table(`
 OBJNAME    OBJTYPE  OBJTEXT
 ---------- -------- --------------------------------
-AERA01     *PGM     lesen password=objSecret99
+MYOBJ      *PGM     sample password=objSecret99
 `);
-    expect(table.rows[0]?.OBJNAME).toBe("AERA01");
+    expect(table.rows[0]?.OBJNAME).toBe("MYOBJ");
     expect(table.rows[0]?.OBJTYPE).toBe("*PGM");
     expect(table.rows[0]?.OBJTEXT).toMatch(/password=<redacted>/);
     expect(table.rows[0]?.OBJTEXT).not.toMatch(/objSecret99/);

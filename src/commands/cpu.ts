@@ -7,7 +7,8 @@ import {
   takeFlag,
 } from "../args.js";
 import { DEFAULT_CPU_JOBS, MAX_LIMIT } from "../config.js";
-import { parseDb2Table, runDb2 } from "../ssh.js";
+import { parseDb2Table } from "../ssh.js";
+import { runDb2 } from "../backend.js";
 
 export async function cpuCommand(args: string[], ctx: AppContext | undefined): Promise<AxiRenderable> {
   if (!ctx) throw new Error("missing context");
