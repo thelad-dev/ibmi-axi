@@ -61,21 +61,23 @@ async function getMcpClient(config: IbmiConfig): Promise<Client> {
 /** Run SQL via MCP (prefer execute_sql; http or stdio). */
 export async function runDb2Mcp(config: IbmiConfig, sql: string): Promise<string> {
   const client = await getMcpClient(config);
+  // Best-practice: prefer canonical execute_sql (ibmi-mcp-server / Mapepire MCP convention)
+  // listTools only for fallback discovery; do not invent tool names.
   let toolName = "execute_sql";
   try {
     const toolsResult = await client.listTools();
     const available = toolsResult.tools.map((t) => t.name);
-    if (!available.includes("execute_sql")) {
-      toolName = available.find((n) => /sql|query|db2|execute/i.test(n)) ?? available[0] ?? "execute_sql";
+    if (!available.includes(toolName)) {
+      toolName = available.find((n) => /sql|query|db2|execute/i.test(n)) ?? available[0] ?? toolName;
     }
   } catch (e) {
-    // proceed with preferred name
+    // proceed with execute_sql (server may still accept it)
   }
 
   try {
     const callRes = await client.callTool({
       name: toolName,
-      arguments: { sql, query: sql, statement: sql },
+      arguments: { sql }, // execute_sql convention in ibmi-mcp-server
     });
     const content = (callRes.content ?? []) as Array<{ type: string; text?: string }>;
     const textParts = content
