@@ -8,7 +8,8 @@ import {
 } from "../args.js";
 import { DEFAULT_SPOOL_LIMIT, MAX_LIMIT } from "../config.js";
 import { assertSafeName, sqlString } from "../parse.js";
-import { parseDb2Table, runDb2 } from "../ssh.js";
+import { parseDb2Table } from "../ssh.js";
+import { runDb2 } from "../backend.js";
 
 export async function spoolCommand(args: string[], ctx: AppContext | undefined): Promise<AxiRenderable> {
   if (!ctx) throw new Error("missing context");

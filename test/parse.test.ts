@@ -14,14 +14,14 @@ import { mockRunner, SAMPLE_MSGW_SECRET_SHIFT, SAMPLE_OBJECT } from "./helpers.j
 
 describe("parse", () => {
   it("parses LIB/OBJ", () => {
-    expect(parseLibObj("MYLIB/MYOBJ")).toEqual({
+    expect(parseLibObj("mylib/myobj")).toEqual({
       library: "MYLIB",
       object: "MYOBJ",
     });
   });
 
   it("parses member targets", () => {
-    expect(parseMemberTarget("MYLIB/QS36SRC", "MYOBJ")).toEqual({
+    expect(parseMemberTarget("MYLIB/QS36SRC", "myobj")).toEqual({
       library: "MYLIB",
       file: "QS36SRC",
       member: "MYOBJ",
@@ -91,7 +91,7 @@ describe("db2 table parse", () => {
     const table = parseDb2Table(`
 OBJNAME    OBJTYPE  OBJTEXT
 ---------- -------- --------------------------------
-MYOBJ     *PGM     lesen password=objSecret99
+MYOBJ      *PGM     sample password=objSecret99
 `);
     expect(table.rows[0]?.OBJNAME).toBe("MYOBJ");
     expect(table.rows[0]?.OBJTYPE).toBe("*PGM");

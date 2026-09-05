@@ -60,7 +60,7 @@ describe("ibmi-axi CLI", () => {
     const secretObj = `
 OBJNAME    OBJTYPE  OBJATTRIBUTE  OBJSIZE  OBJTEXT                       OBJOWNER  LAST_USED_TIMESTAMP         OBJCREATED
 ---------- -------- ------------- -------- ----------------------------- --------- --------------------------- --------------------------
-MYOBJ     *PGM     RPG36         98304    note password=objLeakSecret99 MYLIB   2026-01-08-00.00.00.000000  2019-07-23-08.38.33.000000
+MYOBJ      *PGM     RPG36         98304    note password=objLeakSecret99 MYLIB    2026-01-08-00.00.00.000000  2019-07-23-08.38.33.000000
 
   1 RECORD(S) SELECTED.
 `;

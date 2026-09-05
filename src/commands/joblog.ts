@@ -12,7 +12,8 @@ import {
 } from "../config.js";
 import { assertSafeName, sqlString } from "../parse.js";
 import { redact, truncate } from "../redact.js";
-import { parseDb2Table, runDb2 } from "../ssh.js";
+import { parseDb2Table } from "../ssh.js";
+import { runDb2 } from "../backend.js";
 
 const PREVIEW = 160;
 

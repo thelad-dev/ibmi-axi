@@ -1,7 +1,8 @@
 import type { AxiRenderable } from "../types.js";
 import type { AppContext } from "../context.js";
 import { rejectUnknownFlags, takeBoolFlag } from "../args.js";
-import { parseDb2Table, runDb2 } from "../ssh.js";
+import { parseDb2Table } from "../ssh.js";
+import { runDb2 } from "../backend.js";
 
 export async function aspCommand(args: string[], ctx: AppContext | undefined): Promise<AxiRenderable> {
   if (!ctx) throw new Error("missing context");

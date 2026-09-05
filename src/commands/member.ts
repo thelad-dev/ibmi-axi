@@ -13,9 +13,11 @@ import type { IbmiConfig } from "../config.js";
 import { parseMemberTarget, shSingleQuote } from "../parse.js";
 import { redact, truncate } from "../redact.js";
 import { runSystem, sshExec } from "../ssh.js";
+import { requireSsh } from "../backend.js";
 
 export async function memberCommand(args: string[], ctx: AppContext | undefined): Promise<AxiRenderable> {
   if (!ctx) throw new Error("missing context");
+  requireSsh(ctx.config, "member");
   const local = [...args];
   takeBoolFlag(local, "--help");
 

@@ -4,6 +4,7 @@ import type { AppContext } from "../context.js";
 import { rejectUnknownFlags, takeBoolFlag } from "../args.js";
 import { buildDb2Remote } from "../parse.js";
 import { sshExec, parseDb2Table } from "../ssh.js";
+import { runDb2 } from "../backend.js";
 
 interface Check {
   check: string;
@@ -63,28 +64,19 @@ export async function doctorCommand(args: string[], ctx: AppContext | undefined)
     checks.push({ check: "system-cli", status: "error", detail: "probe failed" });
   }
 
-  // SQL path
+  // SQL path (via active transport ssh or mcp)
   try {
-    const r = await sshExec(
+    const stdout = await runDb2(
       ctx.config,
-      buildDb2Remote("SELECT OS_VERSION, OS_RELEASE, HOST_NAME FROM SYSIBMADM.ENV_SYS_INFO"),
-      { allowNonZero: true, timeoutMs: 20_000 },
+      "SELECT OS_VERSION, OS_RELEASE, HOST_NAME FROM SYSIBMADM.ENV_SYS_INFO",
     );
-    if (r.code === 0 && !/CLI ERROR/i.test(r.stdout + r.stderr)) {
-      const table = parseDb2Table(r.stdout);
-      const row = table.rows[0];
-      const ver = row
-        ? `V${row.OS_VERSION ?? "?"}R${row.OS_RELEASE ?? "?"} host=${row.HOST_NAME ?? "?"}`
-        : "db2 responded";
-      checks.push({ check: "sql-db2", status: "ok", detail: ver.slice(0, 160) });
-      checks.push({ check: "os-level", status: "ok", detail: ver.slice(0, 160) });
-    } else {
-      checks.push({
-        check: "sql-db2",
-        status: "error",
-        detail: summarizeErr(r.stderr || r.stdout) || "db2 not usable",
-      });
-    }
+    const table = parseDb2Table(stdout);
+    const row = table.rows[0];
+    const ver = row
+      ? `V${row.OS_VERSION ?? "?"}R${row.OS_RELEASE ?? "?"} host=${row.HOST_NAME ?? "?"}`
+      : "db2 responded";
+    checks.push({ check: "sql-db2", status: "ok", detail: ver.slice(0, 160) });
+    checks.push({ check: "os-level", status: "ok", detail: ver.slice(0, 160) });
   } catch (err) {
     checks.push({
       check: "sql-db2",
