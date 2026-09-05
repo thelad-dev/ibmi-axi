@@ -4,7 +4,7 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 
 ## What this is
 
-Thin **Live-Read** AXI CLI for IBM i over SSH. Docs stay in MCP-IBMiDocs; DENSION write/deploy policy stays in skill `as400-ibm-i`. Bob is out of scope.
+Thin **Live-Read** AXI CLI for IBM i over SSH. Docs stay in MCP-IBMiDocs; operator write/deploy policy stays in skill `as400-ibm-i`. Bob is out of scope.
 
 ## Commands
 
@@ -21,8 +21,9 @@ Default research host: SSH alias `as400` (override `--host` / `IBMI_AXI_HOST`).
 ## Architecture
 
 - Entry: `bin/ibmi-axi.ts` → `src/cli.ts` (`axi-sdk-js` `runAxiCli`)
-- Remote I/O: `src/ssh.ts` + injectable `SshRunner` (tests mock this; never hit a host in CI)
-- SQL via PASE `qsh`/`db2` (`buildDb2Remote` in `src/parse.ts`); member read via `CPYTOSTMF`
+- Remote I/O: `src/ssh.ts` + `src/mcp.ts` + `src/backend.ts` (SshRunner or MCP stdio via @modelcontextprotocol/sdk; injectable for tests; never hits host in CI)
+- Transport: `--transport ssh|mcp` / IBMI_AXI_TRANSPORT (default ssh); A-ops (doctor/asp/cpu/msgw/obj/joblog/spool) on both, B-ops (member/ifs) require ssh with friendly error
+- SQL via PASE `qsh`/`db2` (ssh) or MCP callTool (mcp); member read via `CPYTOSTMF`
 - Live ops: `asp` ← `QSYS2.ASP_INFO`; `cpu` ← `SYSTEM_ACTIVITY_INFO` + `SYSTEM_STATUS_INFO` (+ optional `ACTIVE_JOB_INFO`); `msgw` ← `MESSAGE_QUEUE_INFO` inquiry + `ACTIVE_JOB_INFO` jobs in `MSGW`
 - Skill body is generated from `src/skill-content.ts` — keep `skills/ibmi-axi/SKILL.md` in sync (`npm run skill:check`)
 

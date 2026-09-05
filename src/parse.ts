@@ -14,7 +14,7 @@ export function parseLibObj(raw: string, label = "object"): LibObj {
   const m = LIB_OBJ_RE.exec(trimmed);
   if (!m) {
     throw new AxiError(
-      `${label} must be LIB/OBJ (e.g. DENSION/AERA01)`,
+      `${label} must be LIB/OBJ (e.g. MYLIB/MYOBJ)`,
       "VALIDATION_ERROR",
       [`Pass ${label} as LIBRARY/OBJECT`],
     );
@@ -59,7 +59,7 @@ export function assertSafePath(path: string): string {
   const trimmed = path.trim();
   if (!trimmed.startsWith("/")) {
     throw new AxiError("IFS path must be absolute (start with /)", "VALIDATION_ERROR", [
-      "Run `ibmi-axi ifs ls /home/LADWEIN`",
+      "Run `ibmi-axi ifs ls /home/USER`",
     ]);
   }
   if (trimmed.includes("\0") || /[\n\r]/.test(trimmed)) {

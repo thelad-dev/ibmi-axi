@@ -8,7 +8,8 @@ import {
   takeFlag,
 } from "../args.js";
 import { parseLibObj, parseObjType, sqlString } from "../parse.js";
-import { parseDb2Table, runDb2 } from "../ssh.js";
+import { parseDb2Table } from "../ssh.js";
+import { runDb2 } from "../backend.js";
 
 export async function objCommand(args: string[], ctx: AppContext | undefined): Promise<AxiRenderable> {
   if (!ctx) throw new Error("missing context");
@@ -33,7 +34,7 @@ export async function objCommand(args: string[], ctx: AppContext | undefined): P
   const positionals = getPositional(local);
   if (positionals.length !== 1) {
     throw new AxiError("obj show requires exactly one LIB/OBJ argument", "VALIDATION_ERROR", [
-      "Run `ibmi-axi obj show DENSION/AERA01 --type *PGM`",
+      "Run `ibmi-axi obj show MYLIB/MYOBJ --type *PGM`",
     ]);
   }
   const { library, object } = parseLibObj(positionals[0]!);
