@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MAX_MEMBER_BYTES, MAX_MEMBER_PREVIEW } from "../src/config.js";
 import { parseLsSizeBytes, parseWcBytes } from "../src/commands/member.js";
+import { buildSshArgs } from "../src/ssh.js";
 import { VERSION } from "../src/version.js";
 import {
   defaultMock,
@@ -328,6 +329,26 @@ ASP_NUMBER  ASP_STATE  ASP_TYPE  TOTAL_CAPACITY  TOTAL_CAPACITY_AVAILABLE  STORA
     );
     expect(result.code).toBe(0);
     expect(result.stdout).toMatch(/MYOBJ/);
+  });
+
+  it("rejects a host that ssh would read as an option", async () => {
+    for (const argv of [
+      ["doctor", "--host=-oProxyCommand=touch_x"],
+      ["doctor", "--host", "-oProxyCommand=touch_x"],
+    ]) {
+      await expect(runCli(argv)).rejects.toThrow(/invalid --host value|--host requires a value/);
+    }
+    await expect(
+      runCli(["doctor"], undefined, { ...process.env, IBMI_AXI_HOST: "-oProxyCommand=touch_x" }),
+    ).rejects.toThrow(/invalid --host value/);
+  });
+
+  it("puts -- before the host in the ssh argument list", () => {
+    const args = buildSshArgs(
+      { host: "as400", connectTimeoutSec: 10 } as Parameters<typeof buildSshArgs>[0],
+      "echo hi",
+    );
+    expect(args.slice(-3)).toEqual(["--", "as400", "echo hi"]);
   });
 
   it("skill generate --check fails when missing", async () => {

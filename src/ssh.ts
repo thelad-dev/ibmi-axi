@@ -4,22 +4,28 @@ import type { IbmiConfig, SshResult, SshRunner } from "./config.js";
 import { redact } from "./redact.js";
 import { buildDb2Remote, shSingleQuote } from "./parse.js";
 
+/** ssh argv: `--` ends option parsing so a host can never be read as an ssh option. */
+export function buildSshArgs(config: IbmiConfig, remoteCommand: string): string[] {
+  return [
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    `ConnectTimeout=${config.connectTimeoutSec}`,
+    "-o",
+    "StrictHostKeyChecking=accept-new",
+    "--",
+    config.host,
+    remoteCommand,
+  ];
+}
+
 export function createSshRunner(config: IbmiConfig): SshRunner {
   if (config.runner) return config.runner;
 
   return {
     async run(remoteCommand, options = {}): Promise<SshResult> {
       const timeoutMs = options.timeoutMs ?? config.connectTimeoutSec * 1000 + 30_000;
-      const args = [
-        "-o",
-        "BatchMode=yes",
-        "-o",
-        `ConnectTimeout=${config.connectTimeoutSec}`,
-        "-o",
-        "StrictHostKeyChecking=accept-new",
-        config.host,
-        remoteCommand,
-      ];
+      const args = buildSshArgs(config, remoteCommand);
 
       return await new Promise<SshResult>((resolve, reject) => {
         const child = spawn(config.sshBin, args, {

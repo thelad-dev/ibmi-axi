@@ -119,7 +119,7 @@ export function resolveConfig(input: ResolveConfigInput): IbmiConfig {
   }
 
   const host = (hostFromFlag ?? env.IBMI_AXI_HOST ?? DEFAULT_HOST).trim();
-  if (!host || /[\s;|&]/.test(host)) {
+  if (!host || host.startsWith("-") || /[\s;|&]/.test(host)) {
     throw new AxiError("invalid --host value", "VALIDATION_ERROR");
   }
 
